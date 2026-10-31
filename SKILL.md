@@ -27,6 +27,7 @@ title: 标题
 author: smiler488          # 固定署名，不要写"良超"
 digest: 摘要（显示在分享卡片）
 cover: ../assets/xxx_封面_900x383.png
+cover_square: ../assets/xxx_封面方形_1080x1080.png   # 可选；同名方版存在时也会自动检测
 source_url: <外链>          # 需要外链时用（正文禁外链，固定走【阅读原文】）
 comment: 1
 ---
@@ -36,7 +37,7 @@ comment: 1
 
 1. **写稿**：读 `references/writing-style.md`（文风铁律）。文献解读类另读 `docs/文献解读类公众号SOP.md`（五段式定稿）。
 2. **排版预览**：`python3 src/publish.py render "articles/<稿>.md"` → previews/ 生成，present_files 交付审阅。
-3. **封面**：读 `references/cover-design.md`（Wong 色板 + 创意视觉总监 V2 六阶段）。**防模板化铁律：只有文献学习栏目用固定格式，其余栏目每张封面必须重新提炼概念，且先查「封面案例档案」确认构图不重复**；概念必须对准文章核心母题而非单一数据点。SVG 手写后用 `scripts/svg2png.py` 渲染成 900×383 PNG，**先用 ViewImage 自检再交付**。
+3. **封面**：读 `references/cover-design.md`（Wong 色板 + 创意视觉总监 V2 六阶段 + **双封面设计法**）。**每篇必须出两张：横版 900×383（推送大图）+ 方版 1080×1080（分享卡片/主页/次条），方版重新构图而非裁切，缺方版视为未交付**。**防模板化铁律：只有文献学习栏目用固定格式，其余栏目每张封面必须重新提炼概念，且先查「封面案例档案」确认构图不重复**；概念必须对准文章核心母题而非单一数据点。SVG 手写后用 `scripts/svg2png.py` 渲染成 PNG，**两张都先用 ViewImage 自检再交付**。管线检测到方版（`<主题>_封面方形_1080x1080.png` 或 front matter `cover_square`）会自动拼接双封面并设置两种裁剪坐标，推草稿后用 get_draft 复核 `cover_info` 两组坐标已生效。
 4. **外链托管**（需要时）：读 `references/publishing-ops.md` 的腾讯文档分发手册（单附件 ≤10MB，超限拆分册）。
 5. **推草稿箱**：`python3 src/publish.py draft "articles/<稿>.md"`。
 6. **发布**：publish 不可逆——**必须等良超明确确认后**才执行 `publish`。
