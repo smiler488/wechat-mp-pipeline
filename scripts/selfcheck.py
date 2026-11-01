@@ -96,7 +96,8 @@ DATA_HINTS = [
 CODE_HINTS = [
     r"github\.com/[\w\-.]+/[\w\-.]+",
     r"仓库\s*[：: ]?\s*[\w\-.]+/[\w\-.]+",      # 「GitHub 仓库 owner/repo」写法
-    r"\b(zenodo|figshare|Code availability|代码仓库|开源代码)\b",
+    r"github\s*[：: ]\s*[\w\-.]+/[\w\-.]+",      # 「GitHub: owner/repo」写法
+    r"\b(zenodo|figshare|Code availability|代码仓库|开源代码|代码开源)\b",
 ]
 EVAL_HINTS = [
     r"\b(ROC|AUC|RMSE|MAE|R²|R2|NRMSE|accuracy|precision|recall|F1)\b",
@@ -129,7 +130,8 @@ def strip_front_matter(text: str) -> str:
 
 def body_text(md: str) -> str:
     """转成近似纯文本，便于上下文判断（保留段落结构）。"""
-    md = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", md)   # 图片
+    # 图片：保留图题文字参与扫描（规则 7 要求图题内术语同样括注），只去掉路径
+    md = re.sub(r"!\[([^\]]*)\]\([^)]*\)", r"\1", md)
     md = re.sub(r"\[([^\]]*)\]\([^)]*\)", r"\1", md)  # 链接
     md = re.sub(r"^#{1,6}\s*", "", md, flags=re.M)   # 标题符号
     md = md.replace("**", "").replace("*", "").replace("`", "")
