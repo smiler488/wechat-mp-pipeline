@@ -18,7 +18,7 @@
 - 落点：`references/writing-style.md`（元规则节）、`SKILL.md`（流水线第 6 步 + 「收到反馈时」节）
 - 新增 `scripts/selfcheck.py`：缩写括注 / 高危行话 / AI 腔 / 署名 / 标题 / 三件事 / 配图 / 段落长度
 - 新增本文件
-- commit：待填
+- commit：`92be2b4`
 
 ## 2026-11-02 · 「要让同一大研究方向的人都看得懂，别把人推出去查资料」
 
