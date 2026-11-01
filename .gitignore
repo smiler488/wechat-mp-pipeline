@@ -1,0 +1,8 @@
+# 云同步冲突副本（OneDrive 在多机编辑时会生成，勿提交）
+*[Cc]onflict*
+*mLaptopPro*
+*(1)*
+
+# Python
+__pycache__/
+*.pyc
