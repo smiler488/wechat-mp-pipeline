@@ -18,6 +18,19 @@
 
 ---
 
+## 2026-11-02 · 缩写扫描剔除仓库标识（AI 表型综述篇实证）
+
+→ **触发**：本篇写「仓库：IA-E-Col/PlantSAM」时 `IA-E` 被误报为未括注缩写。
+  仓库路径 owner/repo 是标识符、不是行文缩写；且 CODE_HINTS 恰恰要求给 owner/repo——
+  两条规则打架，属规则缺陷而非写作问题（闭环 B 判定：通用，换主题仍成立）。
+→ **规则**：`scripts/selfcheck.py` 缩写扫描前先挖掉仓库标识
+  （`github\.com/owner/repo` 与「仓库 owner/repo」两种写法），再跑 ABBR_RE。
+→ **同步发现**：Mac 端项目级副本的 TOP 白名单与 PII 元数据修复未提交远端，
+  本次一并入库对齐。
+→ 落点：`scripts/selfcheck.py`（两处副本已同步）
+
+---
+
 ## 2026-11-02 · 「三件事·评估口径」关键词扩充（写作实证自查触发）
 
 → **scripts/selfcheck.py EVAL_HINTS 增补第三组模式**：`真值 / ground truth / 消融 / ablation / 参照网格`。
