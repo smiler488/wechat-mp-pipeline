@@ -42,6 +42,8 @@ ABBREV_WHITELIST = {
     "DOI", "ISBN", "GPS", "USB", "WIFI", "AI2",
     # 学术元数据（三件套里的字段，大同行都懂，不强制括注）
     "ISSN", "PMID", "JCR", "JIF", "ORCID", "SCI", "SSCI",
+    # 期刊分区标注（2026-11-02 三维表型综述篇：新锐分区官方标注「1 区 TOP」被误报）
+    "TOP",
     # 常识性机构名
     "NASA", "NOAA", "USAID", "USDA", "WHO", "IPCC",
     # 文献元信息字段（三件套里的标识号，同行都懂）
@@ -114,7 +116,8 @@ EN_CHECK = re.compile(r"[A-Za-z]{3,}")
 # 文献元信息标识号（三件套里的编号字段，整串跳过，不必括注）
 META_PATTERNS = [
     re.compile(r"^PMC\d+$"),
-    re.compile(r"^(PMID|PMCID|ISSN|ISBN|ORCID|DOI)$"),
+    re.compile(r"^(PMID|PMCID|ISSN|ISBN|ORCID|DOI|PII)$"),   # 2026-11-02 补 PII（出版社文章编号，与 PMCID 同类）
+    re.compile(r"^S\d{9,}$"),                                # PII 值本体，如 S2590346226000556
     re.compile(r"^CC[0-9A-Z-]*$"),
 ]
 
@@ -219,18 +222,22 @@ def main() -> int:
     # 2026-11-02 修复：\b 在中文环境失效——Python 的 \w 含汉字，「群晖NAS（Network…」
     # 里 NAS 紧贴汉字，两侧都是 \w，\b 不成立，导致已括注的缩写被误报。
     # 改用显式 lookaround：只把「紧邻 ASCII 字母数字」的位置视为缩写边界，汉字不算。
+    # 2026-11-02 修复（AI 表型综述篇）：GitHub 仓库标识 owner/repo 里的全大写段
+    # （如 IA-E-Col/PlantSAM 的 IA-E）被误报为未括注缩写——仓库路径是标识符不是行文
+    # 缩写，且 CODE_HINTS 恰恰要求写 owner/repo，两条规则打架。扫描前先把仓库标识挖掉。
+    body_abbr = re.sub(r"(?:github\.com/|仓库\s*[：: ]?\s*)[\w\-.]+/[\w\-.]+", " ", body)
     ABBR_RE = re.compile(r"(?<![A-Za-z0-9])([A-Z][A-Z0-9-]{2,})(?![A-Za-z0-9])")
     seen, missing = set(), []
-    for m in ABBR_RE.finditer(body):
+    for m in ABBR_RE.finditer(body_abbr):
         a = m.group(0)
         if a in ABBREV_WHITELIST or is_meta_token(a) or a in seen:
             continue
         seen.add(a)
         # 全文任意一次出现带括注即视为已解释（容忍「先出现、后解释」的写法）
-        glossed = any(has_gloss_near(body, k.start(), k.end())
-                      for k in ABBR_RE.finditer(body) if k.group(0) == a)
+        glossed = any(has_gloss_near(body_abbr, k.start(), k.end())
+                      for k in ABBR_RE.finditer(body_abbr) if k.group(0) == a)
         if not glossed:
-            ctx = body[max(0, m.start() - 12):m.end() + 24].replace("\n", " ").strip()
+            ctx = body_abbr[max(0, m.start() - 12):m.end() + 24].replace("\n", " ").strip()
             missing.append(f"{a} 全文未括注 …{ctx}")
     if missing:
         add("✗", f"缩写首现未括注（{len(missing)} 处）", missing)
