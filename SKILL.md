@@ -1,6 +1,6 @@
 ---
 name: wechat-mp-pipeline
-description: smiler488 微信公众号的全流程生产线——从选题写稿、排版预览、封面设计（Wong 色板 + 创意总监 V2 规范）、PDF 外链托管（腾讯文档/smiler488.com），到推送草稿箱与发布确认。当任务涉及为 smiler488 公众号写稿、改稿、做封面、排版、生成预览、托管附件、推草稿或发布时自动加载。触发词：公众号、写稿、封面、排版、推草稿、发布、smiler488。
+description: smiler488 微信公众号的全流程生产线——从选题写稿、排版预览、封面设计（封面设计总监 V3 规范：四阶段流程 + 双封面）、PDF 外链托管（腾讯文档/smiler488.com），到推送草稿箱与发布确认。当任务涉及为 smiler488 公众号写稿、改稿、做封面、排版、生成预览、托管附件、推草稿或发布时自动加载。触发词：公众号、写稿、封面、排版、推草稿、发布、smiler488。
 agent_created: true
 ---
 
@@ -37,7 +37,7 @@ comment: 1
 
 1. **写稿**：先读 `references/writing-style.md` 的**「元规则：反馈闭环与自进化」**一节，再读文风与**术语/缩写首现必括注**规则。文献解读类另读 `docs/文献解读类公众号SOP.md`（五段式定稿）。
 2. **排版预览**：`python3 src/publish.py render "articles/<稿>.md"` → previews/ 生成，present_files 交付审阅。
-3. **封面**：读 `references/cover-design.md`（Wong 色板 + 创意视觉总监 V2 六阶段 + **双封面设计法**）。**每篇必须出两张：横版 900×383（推送大图）+ 方版 1080×1080（分享卡片/主页/次条），方版重新构图而非裁切，缺方版视为未交付**。**防模板化铁律：只有文献学习栏目用固定格式，其余栏目每张封面必须重新提炼概念，且先查「封面案例档案」确认构图不重复**；概念必须对准文章核心母题而非单一数据点。SVG 手写后用 `scripts/svg2png.py` 渲染成 PNG，**两张都先用 ViewImage 自检再交付**。管线检测到方版（`<主题>_封面方形_1080x1080.png` 或 front matter `cover_square`）会自动拼接双封面并设置两种裁剪坐标，推草稿后用 get_draft 复核 `cover_info` 两组坐标已生效。
+3. **封面**：读 `references/cover-design.md`（封面设计总监 V3：**四阶段流程**——内容理解 → 创意探索三草案 → 正式制作 → 视觉审核；**双封面设计法**）。**每篇必须出两张：横版 900×383（推送大图，另存 1800×766 母版）+ 方版 1080×1080（分享卡片/主页/次条），方版重新构图而非裁切，缺方版视为未交付**。**防模板化铁律：只有文献学习栏目用固定格式，其余栏目每张封面必须重新提炼概念，且先查「封面案例档案」确认构图不重复**；概念必须对准文章核心母题而非单一数据点。SVG 手写后用 `scripts/svg2png.py` 渲染成 PNG，**两张都先用 ViewImage 自检再交付**。管线检测到方版（`<主题>_封面方形_1080x1080.png` 或 front matter `cover_square`）会自动拼接双封面并设置两种裁剪坐标，推草稿后用 get_draft 复核 `cover_info` 两组坐标已生效。
 4. **外链托管**（需要时）：读 `references/publishing-ops.md` 的腾讯文档分发手册（单附件 ≤10MB，超限拆分册）。
 5. **推草稿箱**：`python3 src/publish.py draft "articles/<稿>.md"`。
 6. **自检 Loop**：`python3 scripts/selfcheck.py "articles/<稿>.md"` → 按报告修 → 重跑，**✗ 清零才进第 5 步**（最多 3 轮）。机械层之后再过语义层与视觉层，细节见 `references/writing-style.md`「元规则」节。

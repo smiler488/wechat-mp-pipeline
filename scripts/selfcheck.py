@@ -16,6 +16,7 @@
 
 import argparse
 import re
+import struct
 import sys
 from pathlib import Path
 
@@ -212,15 +213,19 @@ def main() -> int:
             add("⚠", f"标题偏长（{len(title)} 字）", ["建议压到 30 字内，微信列表会截断"])
 
     # --- 2. 缩写首现括注 ---
+    # 2026-11-02 修复：\b 在中文环境失效——Python 的 \w 含汉字，「群晖NAS（Network…」
+    # 里 NAS 紧贴汉字，两侧都是 \w，\b 不成立，导致已括注的缩写被误报。
+    # 改用显式 lookaround：只把「紧邻 ASCII 字母数字」的位置视为缩写边界，汉字不算。
+    ABBR_RE = re.compile(r"(?<![A-Za-z0-9])([A-Z][A-Z0-9-]{2,})(?![A-Za-z0-9])")
     seen, missing = set(), []
-    for m in re.finditer(r"\b[A-Z][A-Z0-9-]{2,}\b", body):
+    for m in ABBR_RE.finditer(body):
         a = m.group(0)
         if a in ABBREV_WHITELIST or is_meta_token(a) or a in seen:
             continue
         seen.add(a)
         # 全文任意一次出现带括注即视为已解释（容忍「先出现、后解释」的写法）
         glossed = any(has_gloss_near(body, k.start(), k.end())
-                      for k in re.finditer(r"\b" + re.escape(a) + r"\b", body))
+                      for k in ABBR_RE.finditer(body) if k.group(0) == a)
         if not glossed:
             ctx = body[max(0, m.start() - 12):m.end() + 24].replace("\n", " ").strip()
             missing.append(f"{a} 全文未括注 …{ctx}")
@@ -306,6 +311,46 @@ def main() -> int:
         add("✗", "无正文配图（铁律：至少 1-2 张，封面不算）", ["在信息密度最高章节插入 SVG 信息图或原文图"])
     else:
         add("✓", f"正文配图 {n_img} 张", [])
+
+    # --- 10. 封面：双封面存在性 + 尺寸（2026-11-02 V3 规范：缺方版视为未交付）---
+    def png_size(path: Path):
+        try:
+            head = path.read_bytes()[:24]
+            if head[:8] != b"\x89PNG\r\n\x1a\n":
+                return None
+            return struct.unpack(">II", head[16:24])
+        except Exception:
+            return None
+
+    m_cover = re.search(r"^cover:\s*(\S+)\s*$", raw, flags=re.M)
+    if not m_cover:
+        add("✗", "front matter 缺 cover 字段", ["双封面为每篇必做"])
+    else:
+        cover_items = []
+        cover_path = (p.parent / m_cover.group(1)).resolve()
+        if not cover_path.exists():
+            cover_items.append(f"横版封面文件不存在：{m_cover.group(1)}")
+        else:
+            sz = png_size(cover_path)
+            if sz and sz != (900, 383):
+                cover_items.append(
+                    f"横版封面尺寸 {sz[0]}×{sz[1]}，应为 900×383（管线消费尺寸；1800×766 母版另行保留）")
+        m_sq = re.search(r"^cover_square:\s*(\S+)\s*$", raw, flags=re.M)
+        if m_sq:
+            sq_path = (p.parent / m_sq.group(1)).resolve()
+        else:
+            sq_path = cover_path.with_name(
+                cover_path.stem.replace("_封面_900x383", "_封面方形_1080x1080") + ".png")
+        if not sq_path.exists():
+            cover_items.append(f"缺方版封面（{sq_path.name}），缺方版视为未交付")
+        else:
+            sz = png_size(sq_path)
+            if sz and sz != (1080, 1080):
+                cover_items.append(f"方版封面尺寸 {sz[0]}×{sz[1]}，应为 1080×1080")
+        if cover_items:
+            add("✗", f"封面问题（{len(cover_items)} 项）", cover_items)
+        else:
+            add("✓", "封面双张齐（横版 900×383 + 方版 1080×1080）", [])
 
     # --- 输出 ---
     print("=" * 64)
