@@ -7,6 +7,16 @@
 
 ---
 
+## 2026-11-02 · 缩写扫描剔除仓库标识（AI 表型综述篇实证）
+
+→ **触发**：本篇写「仓库：IA-E-Col/PlantSAM」时 `IA-E` 被误报为未括注缩写。
+  仓库路径 owner/repo 是标识符、不是行文缩写；且 CODE_HINTS 恰恰要求给 owner/repo——
+  两条规则打架，属规则缺陷而非写作问题（闭环 B 判定：通用，换主题仍成立）。
+→ **规则**：`scripts/selfcheck.py` 缩写扫描前先挖掉仓库标识
+  （`github\.com/owner/repo` 与「仓库 owner/repo」两种写法），再跑 ABBR_RE。
+→ 落点：`scripts/selfcheck.py`（逻辑已随 129f5cf 入库；本条补记规则来源）；
+  封面案例档案 +1（Plant Phenome J. sunburst 构图首用）
+
 ## 2026-11-02 · 文献元信息标识号补漏：PII 与新锐分区 TOP 标注（三维表型综述篇自检实证）
 
 → **scripts/selfcheck.py META_PATTERNS / ABBREV_WHITELIST 增补**：
