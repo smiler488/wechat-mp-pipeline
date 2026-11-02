@@ -103,6 +103,9 @@ CODE_HINTS = [
 EVAL_HINTS = [
     r"\b(ROC|AUC|RMSE|MAE|R²|R2|NRMSE|accuracy|precision|recall|F1)\b",
     r"(交叉验证|留一法|hold-?out|显著性|置信区间|误差线)",
+    # 2026-11-02 实证：CV/图形学论文（万花筒雕刻 CVPR 2023 篇）的评估信号是
+    # 真值网格与消融实验，不出现 ROC/RMSE 类指标，旧表导致「评估口径」误报阻断
+    r"(真值|ground[ -]?truth|消融|ablation|参照网格)",
 ]
 
 # 术语括注里最好带英文原词（规则 3）

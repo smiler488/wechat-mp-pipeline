@@ -7,6 +7,13 @@
 
 ---
 
+## 2026-11-02 · 「三件事·评估口径」关键词扩充（写作实证自查触发）
+
+→ **scripts/selfcheck.py EVAL_HINTS 增补第三组模式**：`真值 / ground truth / 消融 / ablation / 参照网格`。
+触发事件：CVPR 2023《Neural Kaleidoscopic Space Sculpting》文献学习篇自检时，全文评估方式交代完整（真值网格 + 消融实验 + 参照扫描），但 CV/图形学论文不出现 ROC/RMSE/交叉验证类关键词，旧表误报「缺评估口径」阻断。落点：scripts/selfcheck.py（双副本同步）。教训：EVAL_HINTS 是按农业遥感/预报类论文的关键词建的表，跨学科文献学习（CV/图形学/医学影像等）需要按评估范式补关键词，而不是改稿迁就误报。
+
+---
+
 ## 2026-11-02 · 「封面设计总监规范 V3」整体升级（良超提供新规范全文）
 
 → **references/cover-design.md 从「创意视觉总监 V2」升级为「封面设计总监 V3」**：
