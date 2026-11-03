@@ -15,6 +15,7 @@
 """
 
 import argparse
+import datetime
 import re
 import struct
 import sys
@@ -89,6 +90,12 @@ AI_CLICHE = [
 EPHEMERAL_TIME = [
     r"昨天", r"前天", r"今天[早中晚凌]", r"今[早天晚]晨", r"今晚", r"刚刚", r"上周", r"上个月",
 ]
+
+# 写稿时是未来、发布时已成过去的计划时间点 —— 2026-11-03 良超实证（双一流警示学科篇）
+# 教育部 2022 年通知里「2023 年接受再评价」被照抄成将来时，发稿时（2026-11）已过期。
+# 规律：引旧政策/旧名单的未来节点，必须锚定成历史（「按当时要求，原定 X 年……」）并补现状。
+STALE_FUTURE_MARK = r"(将|计划|预计|拟|待|尚未|原定|定于|将于|未通过|通不过|不合格|再评价|接受[^。；\n]{0,6}评价|调出[^。；\n]{0,6}范围)"
+TIME_ANCHOR = r"(截至(发稿|目前|今天)|目前|当时|当年|其后|此后|后来|现已|如今)"
 
 # 元叙事标签句 —— 2026-11-02 良超改稿实证二（CVPR 万花筒篇，后台逐句删）
 # 他删掉了：「我的判断是，…」「我的可执行下一步：」「这个方法对我的研究方向有直接的咬合点。」
@@ -351,6 +358,23 @@ def main() -> int:
     time_hits = sorted({t for t in EPHEMERAL_TIME if re.search(t, body)})
     if time_hits:
         add("⚠", "时间词会过期，改用「X 月 X 日」", list(time_hits))
+
+    # --- 6.1 写稿时是未来、发布时已过去的时间点（2026-11-03 双一流警示学科篇实证）---
+    cur_year = datetime.date.today().year
+    stale_hits = []
+    for para in re.split(r"\n\s*\n", body):
+        if re.search(TIME_ANCHOR, para):
+            continue          # 同段已锚定时态（按当时/截至发稿），不算过期
+        for m in re.finditer(r"(20\d{2})\s*年", para):
+            if int(m.group(1)) >= cur_year:
+                continue
+            end = para.find("。", m.end())
+            sent = para[m.start(): end if end != -1 else len(para)]
+            if re.search(STALE_FUTURE_MARK, sent):
+                stale_hits.append(f"「{m.group(1)} 年」仍是将来时写法 …{sent[:44]}")
+                break
+    if stale_hits:
+        add("⚠", "旧文的未来时间点如今已过去：锚定成历史并补现状", stale_hits)
 
     # --- 7. 长段落（>200 字）---
     long_paras = []
