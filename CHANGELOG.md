@@ -7,6 +7,29 @@
 
 ---
 
+## 2026-11-03 · 文献学习"阅读全文"入口回归（良超新规，替代 10-26 废止案）
+
+→ **触发**：良超 2026-11-03 补充：「文献阅读的公众号结尾增加点击阅读全文查看论文原文地址，
+  在推送的时候把论文的原文地址也写到原文链接中，现在草稿箱中的文献学习就开始增加」。
+  （闭环 B 判定：通用——文献学习栏目全篇适用；属"规范变更"，推翻 2026-10-26 的"不设原文链接"废止案，
+  但只挂论文原文地址、仍不分发 PDF。）
+
+→ **新增规则**：文献学习类 front matter 必写 `source_url: <论文原文地址>`（DOI 官方页统一
+  `https://doi.org/<DOI>`，arXiv 写 abs 页）；渲染时自动在结尾固定块之后附 CTA
+  「点击阅读全文，查看论文原文地址」；推送时同址写入草稿"原文链接"（content_source_url）。
+  存量草稿用 `publish.py set-source <media_id> <地址>` 补挂（不动后台手工改动）。
+
+→ **落点**：
+  - `SKILL.md`：front matter 模板 source_url 注释改版。
+  - `references/publishing-ops.md`：「外链规则」整节改版（CTA 同址要求 + set-source 用法）。
+  - `references/writing-style.md`：结尾固定块条目追加文献学习 CTA 约定。
+  - `scripts/selfcheck.py`：新增「文献学习缺 source_url」✗ 规则。
+  - `docs/文献解读类公众号SOP.md`（WechatOfficial 项目内）：§6.5 改写为新政策，§2.5/§3/§7 同步。
+  - 管线（项目 `src/publish.py` + `templates/source_cta.html`）：source_url → 结尾 CTA 自动附加、
+    fetch diff 剔除结尾块噪声、新增 set-source 子命令。
+
+---
+
 ## 2026-11-03 · 信息图容器纪律（上手路径图，良超视觉反馈二）
 
 → **触发**：良超看上手路径图后批评「非常的 AI……下载里空间下面的那些文字不同的类型可以用一个

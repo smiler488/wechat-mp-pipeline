@@ -245,6 +245,11 @@ def main() -> int:
             if "｜" not in title and "|" not in title:
                 add("✗", "文献学习标题缺分隔符",
                     ["格式：【文献学习】 期刊缩写｜论文中文译名"])
+            # 2026-11-03 良超定：文献学习必挂论文原文地址（推送时写入"原文链接"，
+            # 并自动附结尾 CTA「点击阅读全文，查看论文原文地址」）
+            if not re.search(r"^source_url:\s*https?://\S+\s*$", raw, flags=re.M):
+                add("✗", "文献学习稿 front matter 缺 source_url（论文原文地址）",
+                    ["写 https://doi.org/<DOI> 或 arXiv abs 页；只挂原文地址，不分发 PDF"])
         elif len(title) > 40:
             add("⚠", f"标题偏长（{len(title)} 字）", ["建议压到 30 字内，微信列表会截断"])
 

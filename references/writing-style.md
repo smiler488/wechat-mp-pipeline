@@ -209,5 +209,5 @@ grep -oE '\b[A-Z][A-Z0-9-]{2,}\b' "articles/<稿>.md" | sort | uniq -c | sort -r
 - 渲染器扩展语法：`++下划线++`、`==米色高亮==`（全文 ≤1 处，见上）、`~~删除线~~`；图片 alt 自动生成居中图注；引用块为米色提示卡。
 - 列表禁用原生 `<ol>/<ul>/<li>`（微信编辑器会破坏结构），渲染器已降级为字面标记段落。
 - **大表格图片化**：超过 4 列 × 6 行的表格禁止直接贴 Markdown 表格，必须做成信息图（公司用真实 logo、色彩有视觉冲击力），用 `scripts/svg2png.py` 渲染。
-- 结尾固定块由 publish.py 自动附加（front matter 加 `ending: 0` 可跳过）。
+- 结尾固定块由 publish.py 自动附加（front matter 加 `ending: 0` 可跳过）。**文献学习类另在结尾固定块之后自动追加 CTA「点击阅读全文，查看论文原文地址」**（front matter 有 `source_url` 即触发，2026-11-03 良超定，详见 publishing-ops.md 外链规则）。
 - 目标：文章零修改直接发布。

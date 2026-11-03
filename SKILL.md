@@ -28,7 +28,7 @@ author: smiler488          # 固定署名，不要写"良超"
 digest: 摘要（显示在分享卡片）
 cover: ../assets/xxx_封面_900x383.png
 cover_square: ../assets/xxx_封面方形_1080x1080.png   # 可选；同名方版存在时也会自动检测
-source_url: <外链>          # 需要外链时用（正文禁外链，固定走【阅读原文】）
+source_url: <外链>          # 文献学习必填：论文原文地址（https://doi.org/<DOI> 或 arXiv abs 页）；推送时写入"原文链接"并自动附结尾 CTA
 comment: 1
 ---
 ```

@@ -17,10 +17,13 @@ python3 src/publish.py status / drafts / ip         # 状态 / 草稿列表 / �
 - 正文图片走 uploadimg 接口，不占素材库配额。
 - mistune 会把中文图片文件名百分号编码进 src，publish.py 解析前已 unquote，中文文件名素材可正常用。
 
-## 外链规则
+## 外链规则（2026-11-03 良超改版）
 
-- **公众号正文禁止外链**。需要分发 PDF/资料时固定走【阅读原文】：front matter 写 `source_url: <链接>`。
-- PDF 托管渠道优先级：腾讯文档 > smiler488.com > GitHub Pages。未确认 CC/OA 许可的论文，source_url 只指 DOI 官方页，不直接分发 PDF。
+- **公众号正文禁止外链**。文末"阅读全文"入口走 `content_source_url`：front matter 写 `source_url: <链接>`，推送时由 publish.py 自动写入草稿"原文链接"。
+- **文献学习类每篇必写 `source_url: <论文原文地址>`**（DOI 官方页统一 `https://doi.org/<DOI>`，arXiv 写 abs 页），渲染时自动在结尾固定块之后附 CTA「点击阅读全文，查看论文原文地址」（`templates/source_cta.html`）；**CTA 与"原文链接"必须同址**。
+- 未确认 CC/OA 许可的论文**只挂原文地址，不分发 PDF**；PDF 托管渠道优先级仍为腾讯文档 > smiler488.com > GitHub Pages（仅供后台自动回复分发），正文不写获取引导语。
+- 存量草稿补挂（只改原文链接与结尾 CTA，保留后台手工改动，不重渲染）：`python3 src/publish.py set-source <media_id> <论文原文地址>`。
+- 其他栏目要挂外链时沿用同一 `source_url` 机制，但不附文献学习 CTA。
 
 ## 腾讯文档分发手册（2026-10-27 实测）
 
