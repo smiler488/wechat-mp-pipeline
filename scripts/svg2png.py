@@ -83,17 +83,54 @@ def render_system_chrome(svg, out, w, h):
     return r.returncode == 0 and os.path.exists(out) and os.path.getsize(out) > 5000
 
 
+def scaled_copy(svg, w, h):
+    """生成根元素 width/height 改写为目标尺寸的临时副本（viewBox 不动），返回临时路径。
+
+    背景（2026-11-04 实证）：视口截图不会自动缩放 SVG——固有尺寸 900px 的 SVG
+    直接按 1800px 视口渲染，内容会按 900px 贴在画布左上角，右下 3/4 全是留白；
+    反之固有 1800px 按 900px 视口渲染会被裁切。渲染前统一改写宽高即可根治。
+    """
+    import re
+    import tempfile
+    with open(svg, encoding="utf-8") as f:
+        txt = f.read()
+    m = re.search(r"<svg\b[^>]*>", txt)
+    if not m:
+        sys.exit(f"不是合法 SVG（找不到 <svg> 根元素）: {svg}")
+    tag = m.group(0)
+    if re.search(r'\bwidth="', tag):
+        tag = re.sub(r'\bwidth="[^"]*"', f'width="{w}"', tag, count=1)
+    else:
+        tag = tag.replace("<svg", f'<svg width="{w}"', 1)
+    if re.search(r'\bheight="', tag):
+        tag = re.sub(r'\bheight="[^"]*"', f'height="{h}"', tag, count=1)
+    else:
+        tag = tag.replace("<svg", f'<svg height="{h}"', 1)
+    txt = txt[:m.start()] + tag + txt[m.end():]
+    fd, tmp = tempfile.mkstemp(suffix=".svg", prefix="_svg2png_", dir=os.path.dirname(svg))
+    with os.fdopen(fd, "w", encoding="utf-8") as f:
+        f.write(txt)
+    return tmp
+
+
 def main():
     if len(sys.argv) < 3:
         sys.exit(__doc__)
     svg, out = os.path.abspath(sys.argv[1]), os.path.abspath(sys.argv[2])
     w = int(sys.argv[3]) if len(sys.argv) > 3 else W
     h = int(sys.argv[4]) if len(sys.argv) > 4 else H
-    if render_playwright(svg, out, w, h) or render_system_chrome(svg, out, w, h):
-        print(f"written: {out} ({w}x{h})")
-    else:
-        sys.exit("所有渲染路径均失败。Windows 先跑: playwright install chromium；"
-                 "macOS 检查 ~/Library/Caches/ms-playwright 是否存在。")
+    tmp = scaled_copy(svg, w, h)
+    try:
+        if render_playwright(tmp, out, w, h) or render_system_chrome(tmp, out, w, h):
+            print(f"written: {out} ({w}x{h})")
+        else:
+            sys.exit("所有渲染路径均失败。Windows 先跑: playwright install chromium；"
+                     "macOS 检查 ~/Library/Caches/ms-playwright 是否存在。")
+    finally:
+        try:
+            os.remove(tmp)
+        except OSError:
+            pass
 
 
 if __name__ == "__main__":
