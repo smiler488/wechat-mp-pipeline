@@ -393,7 +393,9 @@ def main() -> int:
 
     # --- 8. 三件事：数据集 / 代码 / 评估口径（仅文献学习类强制）---
     # 资讯科普 / 工具教程 / 观点类文章没有可复现数据集，强制要求属误报。
-    is_paper = bool(re.search(r"(文献信息|通讯作者|期刊信息|Data availability|Code availability)", body))
+    # 2026-11-04 修复误报：原触发词含「通讯作者」，一篇讲通讯作者责任的
+    # 资讯文被误判成文献学习类。改用五段式小标题/文献元信息作标记。
+    is_paper = bool(re.search(r"(论文简介|期刊简介|文献信息|期刊信息|Data availability|Code availability)", body))
     missing_three = []
     for label, pats, tip in [
         ("数据集来源", DATA_HINTS, "需交代公开数据集名称或 DOI"),
