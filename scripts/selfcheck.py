@@ -176,7 +176,7 @@ EN_CHECK = re.compile(r"[A-Za-z]{3,}")
 META_PATTERNS = [
     re.compile(r"^PMC\d+$"),
     re.compile(r"^(PMID|PMCID|ISSN|ISBN|ORCID|DOI|PII)$"),   # 2026-11-02 补 PII（出版社文章编号，与 PMCID 同类）
-    re.compile(r"^S\d{9,}$"),                                # PII 值本体，如 S2590346226000556
+    re.compile(r"^S\d{9,}[0-9X]?$"),                          # PII 值本体，如 S2590346226000556 / S277237552500930X（带校验位）
     re.compile(r"^CC[0-9A-Z-]*$"),
 ]
 
