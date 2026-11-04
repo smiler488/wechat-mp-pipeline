@@ -39,6 +39,10 @@ except Exception:
 # 封面主视觉必须让文章主角/主题对象成为画面最大元素；计数与工具隐喻不得盖过主角。
 # 缩略图一问：不看标题，能否一眼认出文章主角？答不出即返工。
 # 规则本体：references/cover-design.md「防模板化铁律 · 主角锚定原则」。
+# 2026-11-04 良超反馈「你公众号里面说的GitHub的仓库，你是不是没有创建呀？
+# 以后记住说要有的仓库你要给我建好了呀」→ 承诺资源先建好：正文承诺即交付物，
+# 写进稿的 GitHub 仓库/数据链接必须在推草稿前真实创建并可访问。
+# 检查 11 逐个 HTTP 核验，404 阻断。规则本体：references/writing-style.md 三件事第 5 条。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -117,9 +121,19 @@ TIME_ANCHOR = r"(截至(发稿|目前|今天)|目前|当时|当年|其后|此后
 # 他删掉了：「我的判断是，…」「我的可执行下一步：」「这个方法对我的研究方向有直接的咬合点。」
 # 「差距也要摆在桌面上：」「合作史的证据链很整齐。」「再往前，」「归纳成一句：…」「两处照录：」
 # 规律：正文只留内容与判断本身，不留「我怎么得出这个判断 / 这一段要讲什么 / 这句话多重要」。
+# 2026-11-04 实证三（学术造假审查篇，草稿箱回流）删掉了：
+# 「这篇只谈手段：」「有人觉得…。规范文本不是这么写的。」「把责任拆开，是五层：」
+# 「我给自己定的清单是这几条，也」「还有一条不在清单里但更根本：…制度立住了，…清单救不了系统性的问题。」
+# 规律同上：报幕式开头、树靶子再打、结构自述、自指清单、口号式收束，一律删。
 META_NARRATION = [
     r"我的(判断|看法|观点|结论|建议|下一步|计划|可执行)[^。；\n]{0,4}[：:是]",
+    r"我给自己(定的|定下)",
     r"(这一|这篇|这个|该方法|这套方法)[^。；\n]{0,8}?对我的",
+    r"^这篇(只)?(谈|讲|盘|说)[：:]",
+    r"有人觉得[^。\n]{0,40}规范文本不是这么写的",
+    r"把[^。；\n]{2,12}拆开[，,](是|成)",
+    r"(还有一条|还有一点)(不在清单里)?但更根本",
+    r"制度(立住|缺席)[，,]",
     r"(也|还)要摆在桌面上",
     r"(归纳成一句|一句话概括|概括起来说|总结一下)",
     r"(证据链很整齐|线索很清晰|值得单独说一句)",
@@ -157,6 +171,14 @@ CODE_HINTS = [
     # 2026-11-04 修正：中文词组不能用 \b 包裹（前字仍是 \w，永远匹配不上），
     # 改为直接子串匹配
     r"(代码仓库|开源代码|代码开源)",
+]
+
+# 正文提到的 GitHub 仓库标识（owner/repo），检查 11 逐个 HTTP 核验存在性。
+# 捕获组只认 ASCII，避免「仓库数据的 C/N 分项」这类中文串误命中。
+REPO_PATTERNS = [
+    r"github\.com/([A-Za-z0-9][A-Za-z0-9\-.]*/[A-Za-z0-9][A-Za-z0-9\-.]*)",
+    r"仓库\s*[：: ]?\s*([A-Za-z0-9][A-Za-z0-9\-.]*/[A-Za-z0-9][A-Za-z0-9\-.]*)",
+    r"[Gg]it[Hh]ub\s*[：: ]\s*([A-Za-z0-9][A-Za-z0-9\-.]*/[A-Za-z0-9][A-Za-z0-9\-.]*)",
 ]
 EVAL_HINTS = [
     r"\b(ROC|AUC|RMSE|MAE|R²|R2|NRMSE|accuracy|precision|recall|F1)\b",
@@ -493,6 +515,42 @@ def main() -> int:
             add("✗", f"封面问题（{len(cover_items)} 项）", cover_items)
         else:
             add("✓", "封面双张齐（横版 900×383 + 方版 1080×1080）", [])
+
+    # --- 11. 正文承诺的 GitHub 仓库必须真实存在（2026-11-04 良超反馈）---
+    # 正文承诺即交付物：链接是死的等于骗读者。写进稿的仓库必须先建好、再写稿。
+    import urllib.request
+    import urllib.error
+    repos = set()
+    scan = md.replace("`", "")
+    for pat in REPO_PATTERNS:
+        for m in re.finditer(pat, scan):
+            owner, _, repo = m.group(1).rstrip(".").partition("/")
+            if len(owner) >= 2 and len(repo) >= 2:
+                repos.add(f"{owner}/{repo}")
+    if repos:
+        repo_ok, repo_bad, repo_unknown = [], [], []
+        for r in sorted(repos):
+            try:
+                req = urllib.request.Request(
+                    f"https://github.com/{r}", method="HEAD",
+                    headers={"User-Agent": "Mozilla/5.0 (selfcheck)"})
+                with urllib.request.urlopen(req, timeout=6) as resp:
+                    code = resp.status
+            except urllib.error.HTTPError as e:
+                code = e.code
+            except Exception:
+                repo_unknown.append(f"{r}（断网/超时，未能核验）")
+                continue
+            if code == 200:
+                repo_ok.append(r)
+            else:
+                repo_bad.append(f"{r} → HTTP {code}：先建仓再写稿（gh repo create …）")
+        if repo_bad:
+            add("✗", "正文承诺的 GitHub 仓库不可访问（承诺资源先建好，再写进稿）", repo_bad)
+        elif repo_unknown:
+            add("⚠", "未能联网核验正文承诺的仓库", repo_unknown + ["推草稿前人工逐个打开确认"])
+        else:
+            add("✓", f"正文承诺的 {len(repo_ok)} 个 GitHub 仓库均存在", repo_ok)
 
     # --- 输出 ---
     print("=" * 64)
