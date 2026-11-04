@@ -569,6 +569,23 @@ def main() -> int:
             ["文末加「关注后回复【关键词】领取 <配套资产>」或系列目录+下一篇预告",
              "配套资产（高清图谱/模板/清单）须先建好可发放，勿空承诺；已发布文章不回改"])
 
+    # --- 13. 学术招聘类专项（2026-11-05 良超定：新开【学术招聘】栏目）---
+    # 招聘信息的可信度红线是"来源官方 + 时效"：LinkedIn 只是线索，每岗位须倒查官方页；
+    # 无来源不发（✗），截止日期缺失读者没法安排申请（⚠，滚动招聘写明即可）。
+    # 规则本体：references/writing-style.md「学术招聘栏目专属」节；完整 SOP docs/学术招聘栏目SOP.md。
+    is_recruit = bool(m_title and "学术招聘" in title)
+    if is_recruit:
+        has_url = re.search(r"https?://\S+", md)
+        has_deadline = re.search(r"截止|招满为止|滚动招聘", md)
+        if not has_url:
+            add("✗", "学术招聘稿无来源官方链接（可信度红线：查不到官方源的岗位不发）",
+                ["每岗位给官方岗位页 URL（可复制文本）；front matter 写 source_url=本期最重要岗位官方页"])
+        if not has_deadline:
+            add("⚠", "学术招聘稿未见截止日期", ["每岗位标 `截止 YYYY-MM-DD`；滚动招聘写明「滚动招聘（招满为止）」"])
+        if not re.search(r"以官方页面为准", md):
+            add("⚠", "学术招聘稿缺固定免责声明",
+                ["文末加：信息以官方页面为准，岗位可能随时调整或提前招满。"])
+
     # --- 输出 ---
     print("=" * 64)
     print(f"自检报告：{p.name}")
