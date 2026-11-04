@@ -29,9 +29,13 @@ smiler488 微信公众号生产管线（WorkBuddy Skill）——把一篇公众�
 
 ## 安装
 
-1. 直接安装：在 WorkBuddy 中对 Agent 说「安装 GitHub 上的 skill：smiler488/wechat-mp-pipeline」
-2. 手动安装：将本仓库内容复制到 `~/.workbuddy/skills/wechat-mp-pipeline/`（用户级，跨项目生效）或 `<项目>/.workbuddy/skills/wechat-mp-pipeline/`（项目级）
-3. Release 附件提供打包好的 `wechat-mp-pipeline.zip`
+**一句话安装**：复制下面这句发给你在用的 AI 助手（WorkBuddy、Claude Code、Codex 等），它会自动完成安装：
+
+```text
+请根据 https://raw.githubusercontent.com/smiler488/wechat-mp-pipeline/main/install.md，安装 wechat-mp-pipeline。
+```
+
+手动安装：将本仓库克隆（或复制）到 `~/.workbuddy/skills/wechat-mp-pipeline/`（用户级，跨项目生效）或 `<项目>/.workbuddy/skills/wechat-mp-pipeline/`（项目级）。Release 附件提供打包好的 `wechat-mp-pipeline.zip`。
 
 ## 依赖
 
