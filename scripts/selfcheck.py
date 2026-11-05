@@ -47,6 +47,10 @@ except Exception:
 # 新稿默认带文首埋点/文末领取钩子/系列化/转发语（已发布文章不回改）。
 # 检查 12 机械层只查「钩子存在性」（领取钩子或系列化至少一），⚠ 不阻断；
 # 资产是否真的建好属人工核对。规则本体：references/writing-style.md「转化设计」节。
+# 2026-11-06 良超反馈（新型研究型大学篇：筹建校联培研究生入学被写成"首批新生"）→
+# 招生表述须落到培养类型与招生资格：研究生联培 ≠ 独立招本科生，筹建校不得笼统写招生。
+# 检查 6.2 机械层扫「裸招生句」（含首批新生/开始招生等且同句无培养类型限定词），⚠ 不阻断。
+# 规则本体：references/writing-style.md「事实核查」节。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -432,6 +436,20 @@ def main() -> int:
                 break
     if stale_hits:
         add("⚠", "旧文的未来时间点如今已过去：锚定成历史并补现状", stale_hits)
+
+    # --- 6.2 招生表述未落到培养类型（2026-11-06 新型研究型大学篇实证）---
+    # 裸招生句 = 含「首批新生/开始招生…」且同句无培养类型限定词。
+    # 联培研究生入学写成"迎来首批新生"会被误读为学校已独立招本科生。
+    ENROLL_BARE = re.compile(r"首批新生|迎来新生|新生入学|新生报到|开始招生|启动招生|首届招生|首批招生")
+    ENROLL_QUAL = re.compile(r"联培|联合培养|本科|博士|硕士|研究生|独立招|直博|保送")
+    enroll_hits = []
+    for para in re.split(r"\n\s*\n", body):
+        for sent in re.split(r"[。；！？\n]", para):
+            if ENROLL_BARE.search(sent) and not ENROLL_QUAL.search(sent):
+                enroll_hits.append(f"…{sent.strip()[:52]}…")
+    if enroll_hits:
+        add("⚠", "招生表述未落到培养类型（联培研究生 ≠ 独立招本科生；筹建校不得笼统写'首批新生'）",
+            enroll_hits[:5])
 
     # --- 7. 长段落（>200 字）---
     long_paras = []
