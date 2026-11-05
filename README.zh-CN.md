@@ -2,6 +2,7 @@
 
 [English](README.md) | 中文
 
+[![CI](https://github.com/smiler488/wechat-mp-pipeline/actions/workflows/validate.yml/badge.svg)](https://github.com/smiler488/wechat-mp-pipeline/actions/workflows/validate.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) ![Agent Skill](https://img.shields.io/badge/Agent_Skill-informational)
 smiler488 微信公众号生产管线（WorkBuddy Skill）——把一篇公众号文章的完整工作流沉淀为可自动触发的技能：选题写稿 → 排版预览 → 封面设计 → 外链托管 → 推送草稿 → 确认发布。
 
 ## 包含内容

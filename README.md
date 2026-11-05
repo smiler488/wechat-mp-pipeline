@@ -2,6 +2,7 @@
 
 English | [中文](README.zh-CN.md)
 
+[![CI](https://github.com/smiler488/wechat-mp-pipeline/actions/workflows/validate.yml/badge.svg)](https://github.com/smiler488/wechat-mp-pipeline/actions/workflows/validate.yml) [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE) ![Agent Skill](https://img.shields.io/badge/Agent_Skill-informational)
 The production pipeline behind my WeChat official account (smiler488), written down as an Agent Skill: topic and draft, layout preview, cover design, hosting of attachments, pushing to the draft box, and publishing after confirmation. Most of the account is about crop science, plant phenotyping and AI for research. The rules are written in Chinese because the articles are.
 
 I keep it public because parts of it are useful on their own: the writing rules for explaining field-specific terms to readers from neighbouring fields, the checklist against "AI-sounding" prose, the colour-blind-safe cover palette, and a script that checks a draft before it goes out.
