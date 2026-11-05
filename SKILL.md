@@ -1,7 +1,9 @@
 ---
 name: wechat-mp-pipeline
 description: smiler488 微信公众号的全流程生产线——从选题写稿、排版预览、封面设计（封面设计总监 V3 规范：四阶段流程 + 双封面）、PDF 外链托管（腾讯文档/smiler488.com），到推送草稿箱与发布确认。当任务涉及为 smiler488 公众号写稿、改稿、做封面、排版、生成预览、托管附件、推草稿或发布时自动加载。触发词：公众号、写稿、封面、排版、推草稿、发布、smiler488。
-agent_created: true
+license: MIT
+metadata:
+  author: Liangchao Deng (smiler488)
 ---
 
 # smiler488 公众号生产管线
