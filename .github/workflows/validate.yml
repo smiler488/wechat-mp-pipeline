@@ -1,0 +1,22 @@
+name: validate
+on: [push, pull_request]
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python .github/scripts/validate_skill.py
+      - name: selfcheck flags the known problems in a bad draft
+        run: |
+          set +e
+          python scripts/selfcheck.py tests/bad_draft.md > report.txt
+          code=$?
+          set -e
+          cat report.txt
+          test $code -eq 1
+          grep -q "署名错误" report.txt
+          grep -q "SIF" report.txt
+          grep -q "值得注意的是" report.txt
