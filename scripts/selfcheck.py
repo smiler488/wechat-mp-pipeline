@@ -56,6 +56,10 @@ except Exception:
 # 但不过度、长文分段小标题、图为主稿配文字介绍、发布后确认声明原创（相同内容优先展示原创）。
 # 检查 14 机械层查标题堆砌/过短、过度加粗、长文缺小标题、图主文辅。
 # 规则本体：references/search-optimization.md。
+# 2026-11-06 良超反馈「我们写公众号别写成工作报告，再出现xxx口径这样的表述了」→
+# 报告腔「xxx 口径」（官方口径/公布口径/汇聚口径…）一律不写，直接陈述或写「据官方介绍」；
+# 「500 米口径」望远镜专业名称豁免。检查 15 机械层扫「口径」，✗ 阻断。
+# 规则本体：references/writing-style.md「文风」节。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -667,6 +671,22 @@ def main() -> int:
     if n_img >= 4 and n_chars < 600:
         add("⚠", f"图 {n_img} 张但文字仅 {n_chars} 字（官方：图/资源为主的稿子须配文字介绍，否则难被搜索召回）",
             ["给图配文字介绍；图是内容的一部分，但不能替代文字"])
+
+    # --- 15. 报告腔词（2026-11-06 良超反馈：公众号别写成工作报告）---
+    # 良超原话：「我们写公众号别写成工作报告，再出现xxx口径这样的表述了」。
+    # 「官方口径/公布口径/汇聚口径/资源口径」这类"xxx口径"是汇报语体，一律不写；
+    # 数字直接给，需要限定来源时写「据官方介绍」。豁免：数字+米口径（望远镜专业名称，
+    # 如"500 米口径球面射电望远镜"）。规则本体：references/writing-style.md「文风」节。
+    body_wo_aperture = re.sub(r"\d+\s*米口径", "", body)
+    kou_hits = []
+    for m in re.finditer(r"口径", body_wo_aperture):
+        line = body_wo_aperture[max(0, m.start() - 12):m.end() + 12].replace("\n", " ").strip()
+        kou_hits.append(f"…{line}…")
+    if kou_hits:
+        add("✗", "报告腔「xxx 口径」（2026-11-06 良超定：别写成工作报告；直接陈述或写「据官方介绍」，"
+                 "「500 米口径」类专业名称除外）", kou_hits[:5])
+    else:
+        add("✓", "无报告腔「口径」", [])
 
     # --- 输出 ---
     print("=" * 64)
