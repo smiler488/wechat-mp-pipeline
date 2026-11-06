@@ -20,7 +20,7 @@
 → **落点**：references/writing-style.md「去 AI 味句式」节（新）· scripts/selfcheck.py 检查 16
   （双破折号/不是…而是 ✗；单破折号 ≥3/否定收尾 ⚠）+ META_NARRATION 报幕回指 4 条 +
   OVERSTRONG 量感词 4 条 + CUTE_HEADING「逐个过/的家底」· templates/ending_block.html ·
-  当篇本地稿按后台终稿逐段同步（不反向 update 草稿）。
+  当篇本地稿按后台终稿逐段同步（不反向 update 草稿）· commit 4659771。
 
 ## 2026-11-06 · 中国科技云篇出现「官方口径/汇聚口径」→ 公众号禁工作报告腔「xxx 口径」
 
