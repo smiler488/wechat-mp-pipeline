@@ -51,6 +51,11 @@ except Exception:
 # 招生表述须落到培养类型与招生资格：研究生联培 ≠ 独立招本科生，筹建校不得笼统写招生。
 # 检查 6.2 机械层扫「裸招生句」（含首批新生/开始招生等且同句无培养类型限定词），⚠ 不阻断。
 # 规则本体：references/writing-style.md「事实核查」节。
+# 2026-11-06 良超提供微信官方《如何让公众号文章获取更多搜索流量？丨搜一搜优化教程01》
+# （微信搜一搜助手 2023-01-06）→ 搜一搜优化进规范：标题清晰不堆砌不过短、加粗标主旨句
+# 但不过度、长文分段小标题、图为主稿配文字介绍、发布后确认声明原创（相同内容优先展示原创）。
+# 检查 14 机械层查标题堆砌/过短、过度加粗、长文缺小标题、图主文辅。
+# 规则本体：references/search-optimization.md。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -622,6 +627,46 @@ def main() -> int:
         if not re.search(r"以官方页面为准", md):
             add("⚠", "学术招聘稿缺固定免责声明",
                 ["文末加：信息以官方页面为准，岗位可能随时调整或提前招满。"])
+
+    # --- 14. 搜一搜可检索性（2026-11-06 学习微信官方《搜一搜优化教程01》）---
+    # 官方标准：标题清晰简洁直接（不堆砌关键词/符号、不过短缺关键信息）；加粗标出主旨句
+    # 但不过度加粗；长文分段 + 小标题；图/资源为主的稿子必须配文字介绍（搜索引擎读不懂纯图）。
+    # 「发布后确认声明原创」属发布环节人工步骤，不在此查。
+    # 规则本体：references/search-optimization.md。
+    if m_title:
+        t = m_title.group(1).strip()
+        core = re.sub(r"^【[^】]*】\s*", "", t)          # 去栏目前缀再判信息量
+        if len(core) < 8:
+            add("⚠", "标题过短、缺关键信息（官方反例：『我的周记』式）",
+                [f"去栏目前缀后仅 {len(core)} 字：{t}"])
+        sym = re.search(r"[。，！？,.!?;；:：、/\\|｜]{2,}", t)
+        if sym:
+            add("⚠", "标题符号堆砌（官方反例：堆砌无意义符号）", [f"…{sym.group(0)}…"])
+        gram_hits = []
+        for n, thr in ((3, 3), (2, 4)):
+            cnt = {}
+            for i in range(len(core) - n + 1):
+                g = core[i:i + n]
+                if re.fullmatch(r"[\u4e00-\u9fffA-Za-z0-9]{%d}" % n, g):
+                    cnt[g] = cnt.get(g, 0) + 1
+            gram_hits += [f"「{g}」×{c}" for g, c in sorted(cnt.items()) if c >= thr]
+        if gram_hits:
+            add("⚠", "标题疑似堆砌关键词（官方反例：重复关键词凑排位）", gram_hits[:5])
+
+    bolds = re.findall(r"\*\*([^*\n]{1,80})\*\*", md)
+    bold_chars = sum(len(b) for b in bolds)
+    if len(bolds) > 15 or (body and bold_chars > 0.12 * len(body)):
+        add("⚠", f"加粗 {len(bolds)} 处偏多（官方：过多重点反而让搜索引擎抓不到重点）",
+            ["每节至多 1-2 处加粗主旨句，其余去粗"])
+
+    n_head = len(re.findall(r"(?m)^#{2,4}\s", md))
+    n_chars = len(re.sub(r"\s", "", body))
+    if n_chars > 1200 and n_head < 2:
+        add("⚠", f"正文 {n_chars} 字但小标题仅 {n_head} 个（官方：分段+小标题利于用户定位与搜索引擎理解）",
+            ["按逻辑分段并补 ##/### 小标题（写法照「小标题中性化」铁律）"])
+    if n_img >= 4 and n_chars < 600:
+        add("⚠", f"图 {n_img} 张但文字仅 {n_chars} 字（官方：图/资源为主的稿子须配文字介绍，否则难被搜索召回）",
+            ["给图配文字介绍；图是内容的一部分，但不能替代文字"])
 
     # --- 输出 ---
     print("=" * 64)
