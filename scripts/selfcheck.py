@@ -64,6 +64,11 @@ except Exception:
 # 这样太AI了，也尽量不要用不是什么什么而是什么什么这样的句子，还有什么什么太重了」→
 # 破折号插入语/「不是…而是」禁（检查 16 ✗）、量感渲染与报幕回指进词表（5.2/META_NARRATION），
 # 惯用结尾模板同步改版（templates/ending_block.html）。规则本体：writing-style.md「去 AI 味句式」节。
+# 2026-11-07 良超反馈（Skill 解剖图篇图注截图）→ 图注科研规范化：正文插图一律带图注，
+# 格式「图编号 + 图标题 + 图中元素解释」，左对齐（渲染器自动补「图N」并加粗编号）；
+# 同次定排版升级：正文 15px→16px、加 font-weight 500（对标量子位，公众号是视觉产品，
+# 大龄科研读者多）。检查 17 机械层查 alt 空 ✗ / alt 无「：」⚠。
+# 规则本体：references/writing-style.md「排版基准」节。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -725,6 +730,25 @@ def main() -> int:
         add("⚠", "句式提醒（单破折号偏多 / 否定式树靶子，宜改正面直陈）", ai_w)
     if not ai_x and not ai_w:
         add("✓", "无破折号插入语与「不是…而是」句式", [])
+
+    # --- 17. 图注科研规范（2026-11-07 良超定）---
+    # 正文插图一律带图注：图编号（渲染器自动补「图N」，alt 里不用写）+ 图标题 +
+    # 图中元素解释，左对齐。写法：图片 alt 按「标题：元素解释」撰写。
+    # alt 为空 ✗ 阻断；alt 非空但无「：」⚠（多半只有标题、缺元素解释）。
+    img_alts = re.findall(r"!\[([^\]]*)\]\((?!http)[^)]*\)", md)
+    cap_x, cap_w = [], []
+    for i, a in enumerate(img_alts, 1):
+        a = a.strip()
+        if not a:
+            cap_x.append(f"第 {i} 张图 alt 为空（缺图注）→ 按「标题：元素解释」补写")
+        elif "：" not in a and ":" not in a:
+            cap_w.append(f"第 {i} 张图图注无「：」→ 应为「图标题：图中元素解释」两段式 …{a[:30]}")
+    if cap_x:
+        add("✗", "正文图片缺图注（2026-11-07 良超定：科研规范图注 = 图编号+图标题+元素解释）", cap_x)
+    if cap_w:
+        add("⚠", "图注结构建议两段式「标题：元素解释」", cap_w)
+    if img_alts and not cap_x and not cap_w:
+        add("✓", f"图注规范（{len(img_alts)} 张图均有「标题：元素解释」图注）", [])
 
     # --- 输出 ---
     print("=" * 64)
