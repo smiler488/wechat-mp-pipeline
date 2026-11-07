@@ -20,7 +20,7 @@
   alt 按「标题：元素解释」撰写（手写「图N」则尊重）；图注样式 14px / #595959。
 → **落点**：workspace src/md2wechat.py（STYLES p/list/blockquote/h3/table/caption + caption_no
   + image() 自动编号 + to_html 每篇重置计数）· references/writing-style.md「排版基准」节 ·
-  scripts/selfcheck.py 检查 17（alt 空 ✗ / 无「：」⚠）· commit 见本条目推送号。
+  scripts/selfcheck.py 检查 17（alt 空 ✗ / 无「：」⚠）· commit 7d27a96。
 
 ## 2026-11-06 · 中国科技云篇草稿回流（闭环 C）→ 去 AI 味句式：破折号 / 「不是…而是」/ 量感渲染
 
