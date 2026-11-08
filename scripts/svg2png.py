@@ -51,7 +51,12 @@ def system_chrome():
 
 
 def render_playwright(svg, out, w, h):
-    from playwright.sync_api import sync_playwright
+    try:
+        from playwright.sync_api import sync_playwright
+    except ImportError:
+        # playwright 未安装时应落到系统 Chrome 兜底，而不是让 ImportError 炸穿整个渲染链
+        # （2026-11-08 Windows 实证：本机无 playwright 模块，旧版直接崩溃、系统 Chrome 兜底没机会跑）
+        return False
     with sync_playwright() as pw:
         # 先试 Playwright 默认浏览器，再退到缓存的 Chrome for Testing
         launchers = [lambda: pw.chromium.launch(args=["--headless=new", "--disable-gpu"])]
