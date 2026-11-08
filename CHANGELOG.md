@@ -7,6 +7,18 @@
 
 ---
 
+## 2026-11-08 · svg2png 在无 playwright 机器上炸穿兜底链 → import 失败落系统 Chrome 兜底
+
+→ **触发**：CloudCompare 教程篇在 Windows 本机渲染信息图，`svg2png.py` 在 playwright 模块缺失时
+  抛 ModuleNotFoundError 直接中断：`render_playwright` 内部 try 只包住启动、包不住顶部 import，
+  系统 Chrome 兜底路径没机会执行。非良超反馈，属工具链实测 bug，按「犯错即通用」处理。
+→ **规则**：`render_playwright` 顶部 import 加 try/except ImportError → return False，
+  自然落到 `render_system_chrome` 兜底；两处副本同步。
+→ **落点**：scripts/svg2png.py · commit 5e6f071（同日 CloudCompare 教程篇 6 张信息图 + 双封面
+  均经系统 Chrome 兜底渲染成功）。
+
+---
+
 ## 2026-11-08 · 学术招聘三条反馈 → 标题写方向 / 单位简介 / 信源只给官方页
 
 → **触发**：良超看完当日【学术招聘】系列后提三条要求：「以后学术招聘的公众号的标题要写名方向，
