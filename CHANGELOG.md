@@ -19,7 +19,7 @@
   （假 DOI 实测同样返回 "DOI does not exist"，判别有效；未注册 ✗ 阻断）；② Crossref 题录
   比对期刊名与年份（不一致 ⚠，中文刊名经别名表对照英文题录）；③ 已知不进国际库的中文刊前缀
   （10.11963 中国棉花）降级 ⚠ 但强制出处带卷期页码，缺即 ✗。
-→ **落点**：scripts/selfcheck.py（检查 21）+ references/writing-style.md「事实核查」节 · commit 见下条目补记
+→ **落点**：scripts/selfcheck.py（检查 21）+ references/writing-style.md「事实核查」节 · commit 66e552f
 
 ## 2026-11-08 · svg2png 在无 playwright 机器上炸穿兜底链 → import 失败落系统 Chrome 兜底
 
