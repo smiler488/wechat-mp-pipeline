@@ -16,7 +16,7 @@
 → **规则**：摘要 ≤120 字符且 ≤300 字节（微信官方 120 字口径 + 字节保守余量，两者取更严）；
   只写主题、最关键数字、截止日期，删「岗位卡片、申请条件逐条说明」目录式尾巴；存量稿不回改。
 → **落点**：references/publishing-ops.md「摘要长度红线」节 · SKILL.md front matter 规范 ·
-  scripts/selfcheck.py 检查 18（超限 ✗ 阻断）· commit 待本次提交回填。
+  scripts/selfcheck.py 检查 18（超限 ✗ 阻断）· commit 78d6f35。
 
 ## 2026-11-08 · 作者简介没先做成表格 → 文献学习作者简介必须表格先行
 
