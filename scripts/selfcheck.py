@@ -77,6 +77,11 @@ except Exception:
 # 微信 draft/add 报 errcode=45004 "description size out of limit"，素材已上传但草稿没建成；
 # 只把摘要压到 108 字符 / 240 字节，其余字段不动，重推成功。→ 摘要双上限：≤120 字符且
 # ≤300 字节，超限 ✗ 阻断。检查 18 落点；规则本体：references/publishing-ops.md「摘要长度红线」节。
+# 2026-11-08 良超反馈（当日学术招聘系列）：「标题要写名方向，文中要简要介绍下单位，
+# 还有不要出现<第三方职业社交平台>」→ 三条栏目通用规则进检查 19（均 ✗ 阻断）：
+# ① 标题必写方向词（词表 + 英文方向缩写）；② 正文必有单位简介句式或机构全称括注；
+# ③ 全文禁第三方线索平台名称与「线索来自…」表述，旧「出处标注」条废止。存量稿不回改。
+# 规则本体：references/writing-style.md「学术招聘栏目专属」节 + docs/学术招聘栏目SOP.md。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -661,7 +666,7 @@ def main() -> int:
         add("✓", "无运营话术", [])
 
     # --- 13. 学术招聘类专项（2026-11-05 良超定：新开【学术招聘】栏目）---
-    # 招聘信息的可信度红线是"来源官方 + 时效"：LinkedIn 只是线索，每岗位须倒查官方页；
+    # 招聘信息的可信度红线是"来源官方 + 时效"：第三方平台帖子只是线索，每岗位须倒查官方页；
     # 无来源不发（✗），截止日期缺失读者没法安排申请（⚠，滚动招聘写明即可）。
     # 规则本体：references/writing-style.md「学术招聘栏目专属」节；完整 SOP docs/学术招聘栏目SOP.md。
     if is_recruit:
@@ -787,6 +792,39 @@ def main() -> int:
                 ["压到 ≤120 字符且 ≤300 字节；只留主题、关键数字与截止日期，删「逐条说明」类目录式尾巴"])
         else:
             add("✓", f"摘要长度合规（{len(dg)} 字符 / {dg_bytes} 字节）", [])
+
+    # --- 19. 学术招聘三项新规（2026-11-08 良超反馈）---
+    # ① 标题必须写明方向：中文方向词表 + 常见英文方向缩写，均无命中即 ✗；
+    # ② 正文要有单位简介：描述性句式或「机构英文全称 + 中文解释」括注至少一处；
+    # ③ 全文（含 front matter / 图注）不出现第三方线索平台名称与中文同义称呼。
+    # 存量稿不回改。规则本体：references/writing-style.md「学术招聘栏目专属」节 +
+    # docs/学术招聘栏目SOP.md §1 / §3 / §4 / §9。
+    if is_recruit:
+        core_title = re.sub(r"^【[^】]*】\s*", "", m_title.group(1).strip()) if m_title else ""
+        direction_cn = ("育种|遗传|基因组|生物信息|数据科学|人工智能|机器学习|深度学习|机器人|"
+                        "表型|遥感|光合|作物|土壤|园艺|植物病理|精准农业|农业|环境|气候|生态|"
+                        "计算|统计|自动化|微生物|食品|神经|材料|物理|化学|数学|经济|教育|"
+                        "视觉|图像|光谱|激光|传感|无人机|建模|模拟|算法|水文|气象|海洋|"
+                        "林业|畜牧|兽医|水产|昆虫|病害|病毒|线虫|蛋白|代谢|细胞|发育|进化|"
+                        "制造|控制|优化|工程|科学")
+        direction_en = r"(?<![A-Za-z])(AI|ML|DL|CV|NLP|CSE|CS|ECE|GIS|UAV|LLM|HPC|GWAS|CRISPR|QTL)(?![A-Za-z])"
+        has_direction = bool(re.search(direction_cn, core_title)
+                             or re.search(direction_en, core_title, flags=re.I))
+        unit_marks = r"(下设|隶属|成立于|建于|创办于|位于|该校|该院|公立|私立|研究型|赠地|分校|校区|规模第|由.{0,12}设立)"
+        unit_gloss = r"（[A-Za-z][A-Za-z.,&'’\- ]{4,90}，[^）]{4,90}）"
+        has_unit = bool(re.search(unit_marks, body) or re.search(unit_gloss, body))
+        platform_hits = re.findall(r"linked\s*in|领英", raw, flags=re.I)
+        r19 = []
+        if not has_direction:
+            r19.append(f"标题未写明方向 → {core_title[:40]}；补研究方向或岗位方向词（如「土豆育种」「生物信息学」）")
+        if not has_unit:
+            r19.append("正文缺单位简介 → 开头用 1-2 句写机构性质、学院定位、与方向相关的积累")
+        if platform_hits:
+            r19.append(f"出现第三方线索平台字样 {len(platform_hits)} 处 → 删掉平台名与「线索来自…」表述，只给官方岗位页 URL")
+        if r19:
+            add("✗", "学术招聘三项新规（2026-11-08 良超定：标题写方向 / 单位简介 / 信源只给官方页）", r19)
+        else:
+            add("✓", "学术招聘三项新规（标题方向 / 单位简介 / 官方信源）", [])
 
     # --- 输出 ---
     print("=" * 64)
