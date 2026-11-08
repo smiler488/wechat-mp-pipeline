@@ -87,6 +87,12 @@ except Exception:
 # ① 标题必写方向词（词表 + 英文方向缩写）；② 正文必有单位简介句式或机构全称括注；
 # ③ 全文禁第三方线索平台名称与「线索来自…」表述，旧「出处标注」条废止。存量稿不回改。
 # 规则本体：references/writing-style.md「学术招聘栏目专属」节 + docs/学术招聘栏目SOP.md。
+# 2026-11-08 良超反馈（种植空间配置篇发布前复核）：「再检查一下文中出现的参考文献是否正确，
+# 并且所引用的内容是否正确。我们作为科研类的公众号不能错误的」→ 复核实证：Evers & Bastiaans 2016
+# 的 DOI 正确但期刊名凭记忆写成 Plant Ecology，DOI 解析实为 Journal of Plant Research——
+# DOI 对、期刊名错同样是引用事故。铁律：文内出处（作者/期刊/年份）以 DOI 解析题录为准，
+# 引用内容逐条回一手原文核验后再推草稿。检查 21 机械层：① 每条 doi: 必须可解析（✗）；
+# ② Crossref 有题录时比对期刊名与年份（不一致 ⚠）。规则本体：references/writing-style.md「事实核查」节。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -842,6 +848,90 @@ def main() -> int:
             ["2026-11-08 实证：凭记忆列涉农院士名单，误列王二涛（非院士）、漏张启发等 5 人；发布后属事实事故"])
     elif title_words:
         add("✓", "涉头衔表述，非名单盘点类", [])
+
+    # --- 21. 文献出处逐条 DOI 核验（2026-11-08 良超反馈：科研类公众号引用不能错）---
+    # 复核实证：Evers & Bastiaans 2016 期刊名凭记忆写成 Plant Ecology，DOI 解析实为
+    # Journal of Plant Research（s10265 = J Plant Res）——DOI 对、期刊名错也是引用事故。
+    # 铁律：文内出处的作者/期刊/年份以 DOI 解析题录为准，引用内容逐条回一手原文核验。
+    # 机械层两查：① 每个 doi: 能否解析（404/410 ✗）；② Crossref 有题录时比对期刊名与年份（⚠）。
+    # 规则本体：references/writing-style.md「事实核查」节。
+    dois = sorted({m.group(1).rstrip(".,;") for m in
+                   re.finditer(r"doi:\s*(10\.[0-9]{4,9}/[^\s，,；;）)]+)", md, flags=re.I)})
+    if dois:
+        import json as _json
+        # 中文刊英文名对照（Crossref 题录只给英文刊名；稿内写中文刊名时经此比对）
+        JOURNAL_ALIASES = {
+            "作物学报": "actaagronomicasinica",
+            "中国农业大学学报": "journalofchinaagriculturaluniversity",
+            "中国棉花": "chinacotton",
+        }
+        # 已知 DOI 不进 DOI 基金会国际库的中文期刊前缀（期刊官网标注亦如此，降级⚠但要求卷期页码）
+        CHN_UNREG_PREFIXES = ("10.11963/",)
+
+        def _norm(s):
+            return re.sub(r"[^a-z0-9\u4e00-\u9fff]", "", s.lower())
+
+        doi_ok, doi_bad, doi_chn, doi_unknown, meta_warn = [], [], [], [], []
+        chunks = re.split(r"[；;]", md)   # 出处括注定位：按分号切块，避开卷期里的括号
+        for d in dois:
+            chunk = next((c for c in chunks if d.lower() in c.lower()), "")
+            # ① 注册机构查询（doiRA）：RA 存在=已注册（Crossref/ISTIC/mEDRA 等）；
+            #    "DOI does not exist" 是笔误/未注册的可靠判别（假 DOI 实测同样返回不存在）
+            try:
+                req = urllib.request.Request(
+                    f"https://doi.org/doiRA/{d}",
+                    headers={"User-Agent": "Mozilla/5.0 (selfcheck)"})
+                with urllib.request.urlopen(req, timeout=8) as resp:
+                    ra = (_json.load(resp) or [{}])[0]
+            except Exception:
+                doi_unknown.append(f"{d}（断网/超时，未能核验）")
+                continue
+            if ra.get("RA"):
+                doi_ok.append(f"{d}（{ra['RA']} 注册）")
+                # ② Crossref 题录比对期刊名与年份（ISTIC 等不在 Crossref 的查不到即跳过）
+                try:
+                    req = urllib.request.Request(
+                        f"https://api.crossref.org/works/{d}",
+                        headers={"User-Agent": "Mozilla/5.0 (selfcheck)"})
+                    with urllib.request.urlopen(req, timeout=8) as resp:
+                        msg = _json.load(resp).get("message", {})
+                    container = (msg.get("container-title") or [""])[0]
+                    m = re.search(r"[（(]([^，,（）()]+)[，,]\s*(\d{4})", chunk)
+                    if m and container:
+                        jn, yr = m.group(1).strip(), m.group(2)
+                        jn_cjk = bool(re.search(r"[\u4e00-\u9fff]", jn))
+                        ct_cjk = bool(re.search(r"[\u4e00-\u9fff]", container))
+                        cmp_jn = JOURNAL_ALIASES.get(jn)
+                        if cmp_jn or jn_cjk == ct_cjk:
+                            probe = cmp_jn or jn
+                            if (_norm(probe) not in _norm(container)
+                                    and _norm(container) not in _norm(probe)):
+                                meta_warn.append(
+                                    f"{d}：稿内期刊名「{jn}」≠ DOI 题录「{container}」，以题录为准")
+                        py = (msg.get("published-print")
+                              or msg.get("published-online") or {}) \
+                            .get("date-parts", [[None]])[0][0]
+                        if py and str(py) != yr:
+                            meta_warn.append(f"{d}：稿内年份 {yr} ≠ DOI 题录 {py}")
+                except Exception:
+                    pass
+            elif d.startswith(CHN_UNREG_PREFIXES):
+                if not re.search(r"\d+\(\d+\)|\d+\s*[：:]\s*\d+\s*[-–]\s*\d+", chunk):
+                    doi_bad.append(f"{d}：未注册 DOI 且出处缺卷期页码——读者无法定位，补「卷(期)：起止页」")
+                else:
+                    doi_chn.append(f"{d}（已知该刊 DOI 不进国际库、官网标注亦如此；出处带卷期页码可定位）")
+            else:
+                doi_bad.append(f"{d}：DOI 基金会无注册记录——疑似笔误，回原文核对")
+        if doi_bad:
+            add("✗", "文献 DOI 无效或出处不可定位（引用错误是发布级事故）", doi_bad)
+        else:
+            add("✓", f"文献 DOI 核验通过（{len(dois)} 条）", doi_ok)
+        if doi_chn:
+            add("⚠", "DOI 未进国际库但可定位（推草稿前到期刊官网终核题录）", doi_chn)
+        if doi_unknown:
+            add("⚠", "未能联网核验 DOI", doi_unknown + ["推草稿前逐条打开 https://doi.org/<DOI> 确认"])
+        if meta_warn:
+            add("⚠", "出处题录与 DOI 解析不一致（期刊名/年份以 DOI 题录为准）", meta_warn)
 
     # --- 输出 ---
     print("=" * 64)

@@ -7,6 +7,20 @@
 
 ---
 
+## 2026-11-08 · 种植空间配置篇发布前复核：DOI 对但期刊名错（Plant Ecology ≠ Journal of Plant Research）→ 文献出处以 DOI 解析题录为准
+
+→ **触发**：良超发布前要求「再检查一下文中出现的参考文献是否正确，并且所引用的内容是否正确。
+  我们作为科研类的公众号不能错误的」。逐条回一手来源复核 5 条文献：引用内容（数字/处理/结论）
+  全部无误，但 Evers & Bastiaans 2016 的期刊名凭记忆写成 Plant Ecology，DOI 10.1007/s10265
+  解析实为 Journal of Plant Research 129:339-351——DOI 对、期刊名错同样是引用事故。
+  另抓出处缺卷期页码（辛明华等中国棉花 DOI 不进国际库，读者点不开，须靠卷期页码定位）。
+→ **规则**：文内出处（作者/期刊/年份）以 DOI 解析题录为准、引用内容逐条回一手原文核验；
+  出处括注必带卷期页码。selfcheck **检查 21** 机械层三查：① doiRA 注册机构核验
+  （假 DOI 实测同样返回 "DOI does not exist"，判别有效；未注册 ✗ 阻断）；② Crossref 题录
+  比对期刊名与年份（不一致 ⚠，中文刊名经别名表对照英文题录）；③ 已知不进国际库的中文刊前缀
+  （10.11963 中国棉花）降级 ⚠ 但强制出处带卷期页码，缺即 ✗。
+→ **落点**：scripts/selfcheck.py（检查 21）+ references/writing-style.md「事实核查」节 · commit 见下条目补记
+
 ## 2026-11-08 · svg2png 在无 playwright 机器上炸穿兜底链 → import 失败落系统 Chrome 兜底
 
 → **触发**：CloudCompare 教程篇在 Windows 本机渲染信息图，`svg2png.py` 在 playwright 模块缺失时
