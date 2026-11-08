@@ -73,6 +73,10 @@ except Exception:
 # 文献学习作者简介 = 作者表 + 合作史证据段，表格先行，禁 bullet 清单代替表格。
 # 检查 8.2 机械层查「## 作者简介」节内 markdown 表格行（≥3 行），缺即 ✗ 阻断。
 # 规则本体：docs/文献解读类公众号SOP.md §3 结构表 + §3.5②。
+# 2026-11-08 推草稿实测（IGZ 学术招聘篇）：front matter digest 145 字符 / 345 字节 →
+# 微信 draft/add 报 errcode=45004 "description size out of limit"，素材已上传但草稿没建成；
+# 只把摘要压到 108 字符 / 240 字节，其余字段不动，重推成功。→ 摘要双上限：≤120 字符且
+# ≤300 字节，超限 ✗ 阻断。检查 18 落点；规则本体：references/publishing-ops.md「摘要长度红线」节。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -770,6 +774,19 @@ def main() -> int:
         add("⚠", "图注结构建议两段式「标题：元素解释」", cap_w)
     if img_alts and not cap_x and not cap_w:
         add("✓", f"图注规范（{len(img_alts)} 张图均有「标题：元素解释」图注）", [])
+
+    # --- 18. 摘要长度红线（2026-11-08 推草稿 45004 实证）---
+    # 微信 draft/add 的 digest 超限报 errcode=45004 "description size out of limit"，
+    # 图文素材已经上传但草稿建不成，只能靠写稿端控制长度。存量稿不回改。
+    m_digest = re.search(r"^digest:\s*(.+)$", raw, flags=re.M)
+    if m_digest:
+        dg = m_digest.group(1).strip()
+        dg_bytes = len(dg.encode("utf-8"))
+        if len(dg) > 120 or dg_bytes > 300:
+            add("✗", f"摘要超限（{len(dg)} 字符 / {dg_bytes} 字节）：推草稿会报 45004",
+                ["压到 ≤120 字符且 ≤300 字节；只留主题、关键数字与截止日期，删「逐条说明」类目录式尾巴"])
+        else:
+            add("✓", f"摘要长度合规（{len(dg)} 字符 / {dg_bytes} 字节）", [])
 
     # --- 输出 ---
     print("=" * 64)
