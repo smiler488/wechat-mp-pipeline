@@ -261,6 +261,9 @@ META_PATTERNS = [
     re.compile(r"^(PMID|PMCID|ISSN|ISBN|ORCID|DOI|PII)$"),   # 2026-11-02 补 PII（出版社文章编号，与 PMCID 同类）
     re.compile(r"^S\d{9,}[0-9X]?$"),                          # PII 值本体，如 S2590346226000556 / S277237552500930X（带校验位）
     re.compile(r"^CC[0-9A-Z-]*$"),
+    # 2026-11-10 修复误报（辐射传输模型科普篇）：期刊页码（如 RSE 增刊页 S56、JGR 页 H123）
+    # 形如单字母+数字，被当成未括注缩写——页码是定位号不是行文缩写，整串跳过
+    re.compile(r"^[A-Z]\d{2,4}$"),
 ]
 
 
@@ -376,12 +379,15 @@ def main() -> int:
     # 2026-11-02 修复（AI 表型综述篇）：GitHub 仓库标识 owner/repo 里的全大写段
     # （如 IA-E-Col/PlantSAM 的 IA-E）被误报为未括注缩写——仓库路径是标识符不是行文
     # 缩写，且 CODE_HINTS 恰恰要求写 owner/repo，两条规则打架。扫描前先把仓库标识挖掉。
-    body_abbr = re.sub(r"(?:github\.com/|仓库\s*[：: ]?\s*)[\w\-.]+/[\w\-.]+", " ", body)
+    body_abbr = re.sub(r"(?:github\.com/|仓库\s*[：: ]?\s*)[\w\-.]+/[\w\-.]+(?:/[\w\-.]+)?", " ", body)
     # 2026-11-04 修复误报（UE5Sim CVPRW 篇）：DOI 字符串里的全大写段（如
     # 10.1109/CVPRW63382.2024.00557 的 CVPRW63382）被当成裸缩写——DOI 是标识符
     # 不是行文缩写（与 owner/repo 同理）。扫描前把 DOI 整串挖掉。
     # 注意顺序：必须在 github 行之后对 body_abbr 挖（曾有一版写在前面又被 body 重赋值冲掉）。
-    body_abbr = re.sub(r"10\.\d{4,9}/[A-Za-z0-9._\-/:()]+", " ", body_abbr)
+    # 2026-11-10 修复漏挖（辐射传输模型科普篇）：旧字符集不含尖括号/分号/加号/百分号，
+    # AMS 风格 DOI（10.1175/1520-0469(1980)037<0630:TSATRT>2.0.CO;2）只挖掉一半，
+    # 剩下的 TSATRT 被当成裸缩写。DOI 后缀可含任意可见字符，扩字符集整体挖掉。
+    body_abbr = re.sub(r"10\.\d{4,9}/[A-Za-z0-9._\-/:()<>=;+%]+", " ", body_abbr)
     ABBR_RE = re.compile(r"(?<![A-Za-z0-9])([A-Z][A-Z0-9-]{2,})(?![A-Za-z0-9])")
     seen, missing = set(), []
     for m in ABBR_RE.finditer(body_abbr):
@@ -624,7 +630,11 @@ def main() -> int:
     scan = md.replace("`", "")
     for pat in REPO_PATTERNS:
         for m in re.finditer(pat, scan):
-            owner, _, repo = m.group(1).rstrip(".").partition("/")
+            # 2026-11-10 修复（辐射传输模型科普篇）：「开源仓库 github.com/owner/repo」写法下
+            # 仓库 pattern 会捕到「github.com/owner」并拼出 https://github.com/github.com/owner
+            # （404 误报）；捕获值自带 github.com/ 前缀时先剥掉再拆 owner/repo。
+            val = re.sub(r"^(?:https?://)?(?:www\.)?github\.com/", "", m.group(1).rstrip("."))
+            owner, _, repo = val.partition("/")
             if len(owner) >= 2 and len(repo) >= 2:
                 repos.add(f"{owner}/{repo}")
     if repos:
@@ -855,8 +865,19 @@ def main() -> int:
     # 铁律：文内出处的作者/期刊/年份以 DOI 解析题录为准，引用内容逐条回一手原文核验。
     # 机械层两查：① 每个 doi: 能否解析（404/410 ✗）；② Crossref 有题录时比对期刊名与年份（⚠）。
     # 规则本体：references/writing-style.md「事实核查」节。
-    dois = sorted({m.group(1).rstrip(".,;") for m in
-                   re.finditer(r"doi:\s*(10\.[0-9]{4,9}/[^\s，,；;）)]+)", md, flags=re.I)})
+    # 2026-11-10 修复（辐射传输模型科普篇）：旧式捕获组不含成对括号，经典 DOI
+    # （10.1016/0034-4257(90)90100-Z）在括号处被截断成假 DOI（检查 21 报✗）。
+    # 改为吞到空白/中文标点为止，再剔尾：分号后接中文视为句末分隔；
+    # 右括号仅在不成对时剥掉（DOI 内部成对括号不动）。
+    def _clean_doi(raw: str) -> str:
+        d = re.split(r"[；;](?=[\u4e00-\u9fff])", raw, 1)[0]
+        d = d.rstrip(".,;;，；")
+        while d.endswith(")") and d.count(")") > d.count("("):
+            d = d[:-1]
+        return d
+
+    dois = sorted({_clean_doi(m.group(1)) for m in
+                   re.finditer(r"doi:\s*(10\.[0-9]{4,9}/[^\s，,）]+)", md, flags=re.I)})
     if dois:
         import json as _json
         # 中文刊英文名对照（Crossref 题录只给英文刊名；稿内写中文刊名时经此比对）
