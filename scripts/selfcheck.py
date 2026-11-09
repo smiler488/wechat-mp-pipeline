@@ -870,7 +870,7 @@ def main() -> int:
     # 改为吞到空白/中文标点为止，再剔尾：分号后接中文视为句末分隔；
     # 右括号仅在不成对时剥掉（DOI 内部成对括号不动）。
     def _clean_doi(raw: str) -> str:
-        d = re.split(r"[；;](?=[\u4e00-\u9fff])", raw, 1)[0]
+        d = re.split(r"[；;](?=[\u4e00-\u9fff])", raw, maxsplit=1)[0]
         d = d.rstrip(".,;;，；。`")
         while d.endswith(")") and d.count(")") > d.count("("):
             d = d[:-1]
