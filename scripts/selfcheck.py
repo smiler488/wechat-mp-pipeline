@@ -871,13 +871,13 @@ def main() -> int:
     # 右括号仅在不成对时剥掉（DOI 内部成对括号不动）。
     def _clean_doi(raw: str) -> str:
         d = re.split(r"[；;](?=[\u4e00-\u9fff])", raw, 1)[0]
-        d = d.rstrip(".,;;，；")
+        d = d.rstrip(".,;;，；。`")
         while d.endswith(")") and d.count(")") > d.count("("):
             d = d[:-1]
         return d
 
     dois = sorted({_clean_doi(m.group(1)) for m in
-                   re.finditer(r"doi:\s*(10\.[0-9]{4,9}/[^\s，,）]+)", md, flags=re.I)})
+                   re.finditer(r"doi:\s*(10\.[0-9]{4,9}/[^\s，。,）`]+)", md, flags=re.I)})
     if dois:
         import json as _json
         # 中文刊英文名对照（Crossref 题录只给英文刊名；稿内写中文刊名时经此比对）
@@ -917,9 +917,17 @@ def main() -> int:
                     with urllib.request.urlopen(req, timeout=8) as resp:
                         msg = _json.load(resp).get("message", {})
                     container = (msg.get("container-title") or [""])[0]
-                    m = re.search(r"[（(]([^，,（）()]+)[，,]\s*(\d{4})", chunk)
-                    if m and container:
-                        jn, yr = m.group(1).strip(), m.group(2)
+                    py = (msg.get("published-print")
+                          or msg.get("published-online") or {}) \
+                            .get("date-parts", [[None]])[0][0]
+                    # 2026-11-10 修复（辐射传输模型科普篇）：同一分块里可能先撞上作者-年份括注
+                    # （如「（Pinty et al., 2001）」），错把它当期刊名报题录不一致——
+                    # 优先选年份与 DOI 题录一致的括注，取不到再退回首个
+                    cands = re.findall(r"[（(]([^，,（）()]+)[，,]\s*(\d{4})", chunk)
+                    pick = next((x for x in cands if py and x[1] == str(py)),
+                                cands[0] if cands else None)
+                    if pick and container:
+                        jn, yr = pick[0].strip(), pick[1]
                         jn_cjk = bool(re.search(r"[\u4e00-\u9fff]", jn))
                         ct_cjk = bool(re.search(r"[\u4e00-\u9fff]", container))
                         cmp_jn = JOURNAL_ALIASES.get(jn)
@@ -929,9 +937,6 @@ def main() -> int:
                                     and _norm(container) not in _norm(probe)):
                                 meta_warn.append(
                                     f"{d}：稿内期刊名「{jn}」≠ DOI 题录「{container}」，以题录为准")
-                        py = (msg.get("published-print")
-                              or msg.get("published-online") or {}) \
-                            .get("date-parts", [[None]])[0][0]
                         if py and str(py) != yr:
                             meta_warn.append(f"{d}：稿内年份 {yr} ≠ DOI 题录 {py}")
                 except Exception:

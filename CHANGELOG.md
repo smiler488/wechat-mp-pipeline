@@ -16,8 +16,10 @@
   github.com/owner/repo」写法时仓库 pattern 捕到「github.com/owner」，拼出
   github.com/github.com/owner 报 404。非良超反馈，属工具链实测 bug，按「犯错即通用」处理。
 → **规则**：① `_clean_doi` 剔尾法（吞到空白/中文标点，分号后接中文视为句末分隔，右括号仅在
-  不成对时剥掉）；② DOI 挖除字符集补 `<>=;+%`，META_PATTERNS 补期刊页码 `^[A-Z]\d{2,4}$`；
-  ③ 仓库捕获值先剥 `github.com/` 前缀再拆 owner/repo。两处副本同步。
+  不成对时剥掉，剔尾含句号/反引号）；② DOI 挖除字符集补 `<>=;+%`，META_PATTERNS 补期刊页码
+  `^[A-Z]\d{2,4}$`；③ 仓库捕获值先剥 `github.com/` 前缀再拆 owner/repo；
+  ④ 题录括注择优：同块先撞上作者-年份括注（如「（Pinty et al., 2001）」）会错报题录不一致，
+  改为优先选年份与 DOI 题录一致的括注。两处副本同步。
 → **落点**：scripts/selfcheck.py · commit 见本条目对应提交
 
 ## 2026-11-08 · 种植空间配置篇发布前复核：DOI 对但期刊名错（Plant Ecology ≠ Journal of Plant Research）→ 文献出处以 DOI 解析题录为准
