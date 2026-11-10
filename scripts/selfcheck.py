@@ -570,14 +570,19 @@ def main() -> int:
     # 凑数"一律禁止，没给图就文字稿。故招聘类不适用 ≥3 张密度下限，有 1 张信息图即通过；
     # 其余栏目视觉密度铁律不变。机械层查不了"图是谁给的"，归人工层按此条核。
     is_recruit = bool(m_title and "学术招聘" in m_title.group(1))
+    # 2026-11-10 良超反馈「写太多了，只要说怎么用，不要讲原理」→ 短工具/产品安利稿
+    # （front matter 标 short_form: 1）不适用 ≥3 图的视觉密度下限，有 1 张「怎么用」图即通过。
+    # 篇幅与原理词由检查 22 卡住。规则本体：references/writing-style.md「工具/产品安利稿专属」节。
+    is_short = bool(re.search(r"^short_form:\s*1\s*$", raw, flags=re.M))
+    min_img = 1 if (is_short or is_recruit) else 3
     n_img = len(re.findall(r"!\[[^\]]*\]\((?!http)", md))
     n_sec = len(re.findall(r"(?m)^##\s", md))
     if n_img == 0:
         add("✗", "无正文配图（铁律：至少 1-2 张，封面不算）", ["在信息密度最高章节插入 SVG 信息图或原文图"])
-    elif not is_paper and n_img < 3 and not is_recruit:
-        add("✗", f"正文配图仅 {n_img} 张（视觉密度铁律：非文献学习类全文 ≥3 张，每主要章节一图）",
+    elif not is_paper and n_img < min_img:
+        add("✗", f"正文配图仅 {n_img} 张（视觉密度铁律：非文献学习类全文 ≥{min_img} 张，每主要章节一图）",
             ["按章节补信息图：流程、对比、结构、时间轴都可图化；表格优先图片化"])
-    elif not is_recruit and n_img < n_sec:
+    elif not is_short and not is_recruit and n_img < n_sec:
         add("⚠", f"正文 {n_sec} 个章节仅 {n_img} 张图（公众号是视觉产品，建议每主要章节一图）", [])
     else:
         add("✓", f"正文配图 {n_img} 张 / {n_sec} 章节", [])
@@ -958,6 +963,36 @@ def main() -> int:
             add("⚠", "未能联网核验 DOI", doi_unknown + ["推草稿前逐条打开 https://doi.org/<DOI> 确认"])
         if meta_warn:
             add("⚠", "出处题录与 DOI 解析不一致（期刊名/年份以 DOI 题录为准）", meta_warn)
+
+    # --- 22. 短工具/产品安利稿（2026-11-10 良超反馈：「你写的太多了，只要说怎么用就行了
+    #          不要讲原理，说明这个 skill 能解决实验室安全考试就行」）---
+    # 通用规则：安利类稿件只回答「能解决什么 + 怎么用」，不写实现原理、页面机制、站点细节、
+    # 包结构、踩坑记录；篇幅压到一屏能读完。front matter 标 short_form: 1 时启用，存量稿不回改。
+    # 规则本体：references/writing-style.md「工具/产品安利稿专属」节。
+    if is_short:
+        n_chars = len(re.sub(r"\s+", "", body))
+        impl_words = (r"div\.scroll|window\.scrollTo|DOM|references/|scripts/|parse_exam\.py|"
+                      r"SKILL\.md|选择器|轮询|滚动事件|计时器|后端同步|硬红线|placeholder|"
+                      r"mouse\.wheel|reload|代码结构|实现原理")
+        hits = sorted(set(re.findall(impl_words, body, flags=re.I)))
+        has_install = bool(re.search(r"请根据\s*https?://|安装\s*@|install", body, flags=re.I))
+        states_goal = bool(re.search(r"考试|准入|任务|流程", body)
+                           and re.search(r"替你|交给|帮你|它会|全包|包办", body))
+        r22 = []
+        if n_chars > 900:
+            r22.append(f"正文 {n_chars} 字符（含图注）超过短稿上限 900 → 安利稿写成了说明书，删原理与展开段")
+        if hits:
+            r22.append(f"出现实现原理/机制词 {hits} → 读者只要用法，删掉或移进技能包文档")
+        if not has_install:
+            r22.append("没有可照抄的安装/使用命令 → 补一句发给 AI 的安装提示词")
+        if not states_goal:
+            r22.append("没点明能解决什么 → 开头一句话写清它替读者做完哪件事")
+        if n_sec > 3:
+            r22.append(f"{n_sec} 个小标题过多 → 短稿只留「能做什么」与「怎么用」两节")
+        if r22:
+            add("✗", "短工具/产品安利稿（只讲用法与能解决什么，不讲原理）", r22)
+        else:
+            add("✓", f"短工具安利稿（{n_chars} 字符 / {n_sec} 节 / {n_img} 图，零原理词，安装命令齐）", [])
 
     # --- 输出 ---
     print("=" * 64)
