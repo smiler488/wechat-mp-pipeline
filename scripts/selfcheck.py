@@ -93,6 +93,12 @@ except Exception:
 # DOI 对、期刊名错同样是引用事故。铁律：文内出处（作者/期刊/年份）以 DOI 解析题录为准，
 # 引用内容逐条回一手原文核验后再推草稿。检查 21 机械层：① 每条 doi: 必须可解析（✗）；
 # ② Crossref 有题录时比对期刊名与年份（不一致 ⚠）。规则本体：references/writing-style.md「事实核查」节。
+# 2026-11-12 良超反馈（文献学习作者表截图：「人的名字都不能显示一行，读起来不方便，
+# 这个表格不能做成可以左右滑的吗」）→ 表格可读性：渲染器已把所有 Markdown 表格包进
+# overflow-x:auto 横向滚动容器并按列数定 min-width（src/md2wechat.py，单元格 word-break:normal
+# 反制微信全局逐字断行）；源文件层两条兜底进检查 23：① 超过 4 列 × 6 行的 Markdown 表格
+# 违反大表图片化铁律（✗）；② 手写 HTML <table> 绕过滚动包裹（⚠）。
+# 规则本体：references/writing-style.md「排版基准」节。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -1014,6 +1020,48 @@ def main() -> int:
             add("✗", "短工具/产品安利稿（只讲用法与能解决什么，不讲原理）", r22)
         else:
             add("✓", f"短工具安利稿（{n_chars} 字符 / {n_sec} 节 / {n_img} 图，零原理词，安装命令齐）", [])
+
+    # --- 23. 表格可读性：大表图片化 + 禁手写 HTML 表格（2026-11-12 良超反馈：
+    #          「人的名字都不能显示一行，读起来不方便，这个表格不能做成可以左右滑的吗」）---
+    # 渲染器已把所有 Markdown 表格包进 overflow-x:auto 横向滚动容器（src/md2wechat.py）；
+    # 源文件层兜底：① >4 列 × 6 行的 Markdown 表格违反大表图片化铁律（✗）；
+    # ② 手写 HTML <table> 绕过滚动包裹（⚠，确需时自行套 overflow-x 容器）。
+    # 规则本体：references/writing-style.md「排版基准」节。
+    big_tables, html_tables = [], 0
+    t_lines, i, in_fence = body.splitlines(), 0, False
+    while i < len(t_lines):
+        ln = t_lines[i]
+        if ln.strip().startswith("```"):
+            in_fence = not in_fence
+            i += 1
+            continue
+        if not in_fence and re.match(r"^\s*\|", ln):
+            block = []
+            while i < len(t_lines) and re.match(r"^\s*\|", t_lines[i]):
+                block.append(t_lines[i])
+                i += 1
+            # 表格块 = 分隔行（|---|---|）紧随表头行
+            if len(block) >= 2 and re.match(r"^\s*\|[\s:|-]+\|?\s*$", block[1]):
+                cells = re.split(r"(?<!\\)\|", block[0])
+                if cells and not cells[0].strip():
+                    cells = cells[1:]
+                if cells and not cells[-1].strip():
+                    cells = cells[:-1]
+                ncols, nrows = len(cells), len(block) - 2
+                if ncols > 4 and nrows > 6:
+                    big_tables.append(
+                        f"{ncols} 列 × {nrows} 行 → 大表图片化铁律（>4 列 × 6 行禁贴 Markdown 表格），做成信息图")
+            continue
+        if not in_fence:
+            html_tables += len(re.findall(r"<table\b", ln, flags=re.I))
+        i += 1
+    if big_tables:
+        add("✗", "大表未图片化（手机上可读性崩塌）", big_tables)
+    if html_tables:
+        add("⚠", f"手写 HTML <table> {html_tables} 处（绕过渲染器的横向滚动包裹）",
+            ["改用 Markdown 表格（自动套滚动容器）；确需合并单元格时自行套 <section style=\"overflow-x:auto\"> 并手机实测"])
+    if not big_tables and not html_tables:
+        add("✓", "表格可读性（滚动容器自动包裹 / 无超标大表）", [])
 
     # --- 输出 ---
     print("=" * 64)
