@@ -570,11 +570,16 @@ def main() -> int:
     # 凑数"一律禁止，没给图就文字稿。故招聘类不适用 ≥3 张密度下限，有 1 张信息图即通过；
     # 其余栏目视觉密度铁律不变。机械层查不了"图是谁给的"，归人工层按此条核。
     is_recruit = bool(m_title and "学术招聘" in m_title.group(1))
+    # 2026-11-11 征稿/CFP 速递（良超定「纯征稿速递…风格接近【学术招聘】」）：
+    # 【征稿】类与【学术招聘】同属公告型速递，配图不适用 ≥3 张密度下限（公告型没给图就
+    # 文字稿、不为凑密度造图），有 1 张征稿速览信息图即通过；可信度红线（官方来源 + 截止 +
+    # 免责声明）由下方检查 13b 兜底。规则本体：references/writing-style.md「征稿栏目专属」节。
+    is_cfp = bool(m_title and "征稿" in m_title.group(1))
     # 2026-11-10 良超反馈「写太多了，只要说怎么用，不要讲原理」→ 短工具/产品安利稿
     # （front matter 标 short_form: 1）不适用 ≥3 图的视觉密度下限，有 1 张「怎么用」图即通过。
     # 篇幅与原理词由检查 22 卡住。规则本体：references/writing-style.md「工具/产品安利稿专属」节。
     is_short = bool(re.search(r"^short_form:\s*1\s*$", raw, flags=re.M))
-    min_img = 1 if (is_short or is_recruit) else 3
+    min_img = 1 if (is_short or is_recruit or is_cfp) else 3
     n_img = len(re.findall(r"!\[[^\]]*\]\((?!http)", md))
     n_sec = len(re.findall(r"(?m)^##\s", md))
     if n_img == 0:
@@ -582,7 +587,7 @@ def main() -> int:
     elif not is_paper and n_img < min_img:
         add("✗", f"正文配图仅 {n_img} 张（视觉密度铁律：非文献学习类全文 ≥{min_img} 张，每主要章节一图）",
             ["按章节补信息图：流程、对比、结构、时间轴都可图化；表格优先图片化"])
-    elif not is_short and not is_recruit and n_img < n_sec:
+    elif not is_short and not is_recruit and not is_cfp and n_img < n_sec:
         add("⚠", f"正文 {n_sec} 个章节仅 {n_img} 张图（公众号是视觉产品，建议每主要章节一图）", [])
     else:
         add("✓", f"正文配图 {n_img} 张 / {n_sec} 章节", [])
@@ -706,6 +711,22 @@ def main() -> int:
         if not re.search(r"以官方页面为准", md):
             add("⚠", "学术招聘稿缺固定免责声明",
                 ["文末加：信息以官方页面为准，岗位可能随时调整或提前招满。"])
+
+    # --- 13b. 征稿/CFP 速递专项（2026-11-11，与学术招聘同可信度红线）---
+    # 征稿是公告型速递，可信度红线同样是"来源官方 + 时效 + 免责声明"：只给官方专题页 URL，
+    # 标明截稿时间，文末固定免责声明。第三方平台帖子只是线索，须倒查官方页。规则本体：
+    # references/writing-style.md「征稿栏目专属」节。
+    if is_cfp:
+        has_url = re.search(r"https?://\S+", md)
+        has_deadline = re.search(r"截止|截稿|招满为止|滚动", md)
+        if not has_url:
+            add("✗", "征稿稿无官方来源链接（可信度红线：只给官方专题页 URL）",
+                ["给官方专题页/征稿页 URL（可复制文本）；front matter 写 source_url"])
+        if not has_deadline:
+            add("⚠", "征稿稿未见截止日期", ["写明「截稿 YYYY-MM-DD」；滚动征稿写明即可"])
+        if not re.search(r"以官方页面为准", md):
+            add("⚠", "征稿稿缺固定免责声明",
+                ["文末加：信息以官方页面为准，专题安排与截稿时间可能调整。"])
 
     # --- 14. 搜一搜可检索性（2026-11-06 学习微信官方《搜一搜优化教程01》）---
     # 官方标准：标题清晰简洁直接（不堆砌关键词/符号、不过短缺关键信息）；加粗标出主旨句
