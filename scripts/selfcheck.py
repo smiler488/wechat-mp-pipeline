@@ -99,6 +99,13 @@ except Exception:
 # 反制微信全局逐字断行）；源文件层两条兜底进检查 23：① 超过 4 列 × 6 行的 Markdown 表格
 # 违反大表图片化铁律（✗）；② 手写 HTML <table> 绕过滚动包裹（⚠）。
 # 规则本体：references/writing-style.md「排版基准」节。
+# 2026-11-22 良超反馈（王喜庆团队招聘稿）：「我们首先应该去网上收集可信的信息，
+# 给用户充分介绍一下招聘的单位或者学院或者团队，因为很多科研人员并不了解招聘单位」→
+# 通用（换任何单位/岗位均成立），且为 2026-11-08「简要介绍单位」同类第二次。规则：
+# 写稿前置单位/学院/团队背景调研（官方一手源、禁自媒体、逐项可核验），正文升级为独立小节
+# 充分介绍（≥200 汉字、覆盖 ≥3 类维度）、文末 ≥2 条官方信息入口 URL。检查 24 机械层：
+# 缺独立小节 ✗ / 篇幅不足 ✗ / 维度不足 ✗ / 官方入口 URL <2 ✗；存量稿不回改。
+# 规则本体：references/writing-style.md「学术招聘栏目专属」节 + docs/学术招聘栏目SOP.md §2A/§3/§4。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -1062,6 +1069,45 @@ def main() -> int:
             ["改用 Markdown 表格（自动套滚动容器）；确需合并单元格时自行套 <section style=\"overflow-x:auto\"> 并手机实测"])
     if not big_tables and not html_tables:
         add("✓", "表格可读性（滚动容器自动包裹 / 无超标大表）", [])
+
+    # --- 24. 学术招聘：单位/团队背景调研与充分介绍（2026-11-22 良超反馈）---
+    # 良超原话：「我们首先应该去网上收集可信的信息，给用户充分介绍一下招聘的单位或者学院
+    # 或者团队，因为很多科研人员并不了解招聘单位」。升级 2026-11-08 检查 19 的「1-2 句单位简介」：
+    # 改为独立小节 + 篇幅 + 维度覆盖 + 官方入口 URL 四项机械卡口。存量稿不回改，仅新稿按此执行。
+    # 规则本体：references/writing-style.md「学术招聘栏目专属」节 + docs/学术招聘栏目SOP.md §2A/§3/§4。
+    if is_recruit:
+        m_sec = re.search(r"^##\s+[^\n]*(?:单位|团队|研究院|学院|依托|平台|机构|招聘方)[^\n]*$",
+                          md, flags=re.M)
+        intro = ""
+        if m_sec:
+            tail = md[m_sec.end():]
+            nxt = re.search(r"^##\s+", tail, flags=re.M)
+            intro = tail[:nxt.start()] if nxt else tail
+        n_han = len(re.findall(r"[\u4e00-\u9fff]", intro))
+        dims = {
+            "机构性质/隶属": r"教育部直属|独立法人|新型研发机构|二级科研教育|京外|隶属|直属|公立|私立|注册名|重点引进|研究型",
+            "时间/地点": r"成立于|建于|创办于|注册成立|揭牌|落户|位于|校区|园区|分院",
+            "定位/方向": r"重点开展|重点围绕|聚焦|定位|研究方向|智慧农业|智能育种|分子设计|表型|作物模型|学科",
+            "平台/成果/合作": r"平台|种子库|实验室|流动站|实践基地|专项|发表|大语言模型|合作|试验基地",
+            "依托单位关系": r"依托|挂靠|分院|联合研究院|工作地点|驻点",
+        }
+        dim_hits = [k for k, pat in dims.items() if re.search(pat, intro)]
+        official_urls = [u.rstrip("。，,；;、）)】]》>") for u in
+                         re.findall(r"https?://[^\s<>]+", md)]
+        official_urls = [u for u in official_urls if u.startswith("http")]
+        r24 = []
+        if not m_sec:
+            r24.append("缺「单位/团队介绍」独立小节 → 正文前部设 ## 招聘单位与团队（2026-11-22 良超定，旧 1-2 句废止）")
+        if n_han < 200:
+            r24.append(f"单位介绍篇幅不足（{n_han} 汉字 < 200）→ 充分介绍机构性质、定位、平台、团队方向与成果")
+        if len(dim_hits) < 3:
+            r24.append(f"单位介绍维度不足（命中 {len(dim_hits)}/5 类 < 3）→ 补机构性质、时间地点、定位方向、平台成果、依托关系")
+        if len(official_urls) < 2:
+            r24.append(f"官方信息入口 URL 不足（{len(official_urls)} 条 < 2）→ 文末给 ≥2 条可复制的官方页 URL")
+        if r24:
+            add("✗", "学术招聘单位/团队背景介绍（2026-11-22 良超定：先调研、独立成节、充分介绍）", r24)
+        else:
+            add("✓", f"学术招聘单位/团队介绍（独立成节 / {n_han} 汉字 / {len(dim_hits)} 类维度 / {len(official_urls)} 条官方入口）", [])
 
     # --- 输出 ---
     print("=" * 64)
