@@ -117,6 +117,13 @@ except Exception:
 # CC FAQ 认为未改动摘录放进讲解文章通常只行使复制权，Elsevier 对照表「非商业分发」为 Yes。
 # 文献学习稿声明 CC BY 许可却一张原图都没有 → 检查 27 ⚠ 提示（不阻断，条件不具备可人工豁免）。
 # 规则本体：references/writing-style.md「文献学习栏目专属」节 + docs/文献解读类公众号SOP.md §5 第 5 条。
+# 2026-11-23 良超两张草稿截图 + 一句作图要求 → 两条规则：
+# ① 样式：结尾 CTA 卡片米色底改灰底 #F5F5F5（templates/source_cta.html）；文末 `> 引用` 说明
+#   「没必要再强调」，blockquote 改普通灰字 14px 无卡片（src/md2wechat.py STYLES）。
+# ② 信息图去辅助标签纪律：避免不必要的辅助标签和说明，让布局本身发挥解释作用——不写
+#   「步骤/阶段/模块/说明」元标签、不为布局已表达的关系补文字、不为每个元素配释义小字；
+#   图注在图外，不受影响。属 L3 视觉审核（同封面主角锚定，机械层不判），每张自绘图 ViewImage 逐项过。
+# 规则本体：references/writing-style.md「排版基准 · 必须配图」信息图去辅助标签纪律。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
