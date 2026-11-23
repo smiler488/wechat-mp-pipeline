@@ -112,6 +112,11 @@ except Exception:
 # **加粗** ✗ / 手写内联样式 ✗），软约束进检查 26（开头 >1 段 ⚠ / 并列字段未用列表 ⚠ /
 # 正文出现构图复述 ⚠），检查 5.4 放宽为绿色高亮 >8 处 ⚠，检查 14 废止「加粗偏多」提示，
 # 检查 24 加 >400 汉字 ⚠ 精简提示。规则本体：references/writing-style.md「全号统一写法与排版」节。
+# 2026-11-23 良超问「我们不能使用论文的原图吗？我们是学习和教育性质呀」→ ND 不等于不能用原图：
+# CC BY-NC-ND 4.0 §2(a)(1)(A) 允许非商业「全部或部分复制并分享」，§2(a)(4) 技术性修改不算改编，
+# CC FAQ 认为未改动摘录放进讲解文章通常只行使复制权，Elsevier 对照表「非商业分发」为 Yes。
+# 文献学习稿声明 CC BY 许可却一张原图都没有 → 检查 27 ⚠ 提示（不阻断，条件不具备可人工豁免）。
+# 规则本体：references/writing-style.md「文献学习栏目专属」节 + docs/文献解读类公众号SOP.md §5 第 5 条。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -390,6 +395,14 @@ def main() -> int:
                     ["写 https://doi.org/<DOI> 或 arXiv abs 页；只挂原文地址，不分发 PDF"])
         elif len(title) > 40:
             add("⚠", f"标题偏长（{len(title)} 字）", ["建议压到 30 字内，微信列表会截断"])
+
+    # --- 1.5 文献学习原图与许可（检查 27，2026-11-23）---
+    # ND 不等于不能用原图：声明 CC BY 许可却一幅原文图都没有，提示人工确认。
+    if (m_title and m_title.group(1).strip().startswith("【文献学习】")
+            and re.search(r"CC\s*BY", raw, flags=re.I)
+            and not re.search(r"!\[[^\]]*(?:论文原图|原文图)[^\]]*\]\(", md)):
+        add("⚠", "文献学习稿声明 CC BY 许可但未见原文图",
+            ["CC BY-NC-ND 4.0 允许非商业原样使用原图；补 1–2 幅并逐图署名，确无条件取图可人工豁免"])
 
     # --- 2. 缩写首现括注 ---
     # 2026-11-02 修复：\b 在中文环境失效——Python 的 \w 含汉字，「群晖NAS（Network…」
