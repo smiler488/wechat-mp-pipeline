@@ -115,7 +115,7 @@ except Exception:
 # 2026-11-23 良超问「我们不能使用论文的原图吗？我们是学习和教育性质呀」→ ND 不等于不能用原图：
 # CC BY-NC-ND 4.0 §2(a)(1)(A) 允许非商业「全部或部分复制并分享」，§2(a)(4) 技术性修改不算改编，
 # CC FAQ 认为未改动摘录放进讲解文章通常只行使复制权，Elsevier 对照表「非商业分发」为 Yes。
-# 文献学习稿声明 CC BY 许可却一张原图都没有 → 检查 27 ⚠ 提示（不阻断，条件不具备可人工豁免）。
+# 文献学习稿声明 CC BY 许可却一张原图都没有 → 检查 28 ⚠ 提示（不阻断，条件不具备可人工豁免）。
 # 规则本体：references/writing-style.md「文献学习栏目专属」节 + docs/文献解读类公众号SOP.md §5 第 5 条。
 # 2026-11-23 良超两张草稿截图 + 一句作图要求 → 两条规则：
 # ① 样式：结尾 CTA 卡片米色底改灰底 #F5F5F5（templates/source_cta.html）；文末 `> 引用` 说明
@@ -124,6 +124,11 @@ except Exception:
 #   「步骤/阶段/模块/说明」元标签、不为布局已表达的关系补文字、不为每个元素配释义小字；
 #   图注在图外，不受影响。属 L3 视觉审核（同封面主角锚定，机械层不判），每张自绘图 ViewImage 逐项过。
 # 规则本体：references/writing-style.md「排版基准 · 必须配图」信息图去辅助标签纪律。
+# 2026-11-23 良超后台改后发布 Mol Plant 稿并回流八条（「这样能帮你减小AI风格，读者更加喜欢」）：
+# 许可行不展开解释、删新锐分区认定提示句、禁「合作线/表型路线并行」等 XX线 表述、BlendMask 等模型名
+# 也要括注、「压到」→「压缩到」、图+指代改直接陈述、「落在」→「作用于/发生在」、
+# 「证据缺口」→「还有…可以继续深入挖掘」。落点：检查 29（细节措辞，多数 ✗）与检查 30（模型名括注 ✗）。
+# 规则本体：references/writing-style.md「去 AI 味句式」实证五、「术语与缩写」第 10 条、「文献学习栏目专属」。
 ABBREV_WHITELIST = {
     "PDF", "URL", "HTML", "CSS", "JSON", "CSV", "XML",
     "USA", "UK", "EU", "UN",
@@ -403,13 +408,49 @@ def main() -> int:
         elif len(title) > 40:
             add("⚠", f"标题偏长（{len(title)} 字）", ["建议压到 30 字内，微信列表会截断"])
 
-    # --- 1.5 文献学习原图与许可（检查 27，2026-11-23）---
+    # --- 1.5 文献学习原图与许可（检查 28，2026-11-23）---
     # ND 不等于不能用原图：声明 CC BY 许可却一幅原文图都没有，提示人工确认。
     if (m_title and m_title.group(1).strip().startswith("【文献学习】")
             and re.search(r"CC\s*BY", raw, flags=re.I)
             and not re.search(r"!\[[^\]]*(?:论文原图|原文图)[^\]]*\]\(", md)):
         add("⚠", "文献学习稿声明 CC BY 许可但未见原文图",
             ["CC BY-NC-ND 4.0 允许非商业原样使用原图；补 1–2 幅并逐图署名，确无条件取图可人工豁免"])
+
+    # --- 1.6 去 AI 味细节与模型名括注（检查 29 / 30，2026-11-23 发布稿回流）---
+    # 良超后台改后发布，回流八条：许可行不展开、删分区认定提示、禁「XX线」、BlendMask 要括注、
+    # 「压到」→「压缩到」、图+指代改直接陈述、「落在」改「作用于/发生在」、「证据缺口」改温和表述。
+    AI_DETAIL = [
+        (r"以本单位(最新)?(认定)?文件为准|认定(口径)?并不统一", "✗",
+         "分区认定提示句已废止（2026-11-23 发布稿删除），期刊简介不写"),
+        (r"该许可允许|本文据此嵌入|据此原样使用", "✗",
+         "许可行只写「许可：CC BY-NC-ND 4.0。」不展开；署名放图注"),
+        (r"(合作|研究|技术|表型|工作)线|路线并行", "✗",
+         "不用「XX线」概括，改主谓宾（谁做了什么）"),
+        (r"压到(二维|低维|三维|\d+\s*维)", "✗", "降维语境写「压缩到」"),
+        (r"证据缺口", "✗", "改温和表述：还有…可以继续深入挖掘"),
+        (r"(另|这)一张?图把|这件事放到", "⚠",
+         "直接陈述图分析了什么，不用「图把这件事…」"),
+    ]
+    hits28 = {}
+    for pat, level, hint in AI_DETAIL:
+        for m in re.finditer(pat, body):
+            ctx = body[max(0, m.start() - 14):m.end() + 16].replace("\n", " ").strip()
+            hits28.setdefault((level, hint), []).append(f"…{ctx}")
+    for (level, hint), items in hits28.items():
+        add(level, "去 AI 味细节（2026-11-23 发布稿回流）", [hint] + items[:4])
+
+    MODEL_TERMS = ["BlendMask", "Mask R-CNN", "GoogLeNet", "AlexNet", "VGG16", "VGG19",
+                   "ResNet18", "ResNet50", "ResNet101", "U-Net", "EfficientNet",
+                   "Swin Transformer", "DeepLab"]
+    miss29 = []
+    for term in MODEL_TERMS:
+        occ = [m for m in re.finditer(re.escape(term), body)]
+        if not occ:
+            continue
+        if not any(has_gloss_near(body, m.start(), m.end()) for m in occ):
+            miss29.append(f"{term} 全文未括注 → 首现给一句「它是什么、干什么用」")
+    if miss29:
+        add("✗", "模型 / 算法专名未括注（检查 30）", miss29)
 
     # --- 2. 缩写首现括注 ---
     # 2026-11-02 修复：\b 在中文环境失效——Python 的 \w 含汉字，「群晖NAS（Network…」
@@ -427,6 +468,9 @@ def main() -> int:
     # AMS 风格 DOI（10.1175/1520-0469(1980)037<0630:TSATRT>2.0.CO;2）只挖掉一半，
     # 剩下的 TSATRT 被当成裸缩写。DOI 后缀可含任意可见字符，扩字符集整体挖掉。
     body_abbr = re.sub(r"10\.\d{4,9}/[A-Za-z0-9._\-/:()<>=;+%]+", " ", body_abbr)
+    # CC 许可标识（CC BY / CC BY-NC-ND 等）是许可名不是行文缩写，与 DOI 同理挖掉，
+    # 避免「许可：CC BY-NC-ND 4.0。」被误判为未括注缩写（2026-11-23）。
+    body_abbr = re.sub(r"CC\s+BY(?:-[A-Z]{2})*", " ", body_abbr)
     ABBR_RE = re.compile(r"(?<![A-Za-z0-9])([A-Z][A-Z0-9-]{2,})(?![A-Za-z0-9])")
     seen, missing = set(), []
     for m in ABBR_RE.finditer(body_abbr):
