@@ -279,10 +279,12 @@ CODE_HINTS = [
 
 # 正文提到的 GitHub 仓库标识（owner/repo），检查 11 逐个 HTTP 核验存在性。
 # 捕获组只认 ASCII，避免「仓库数据的 C/N 分项」这类中文串误命中。
+# 2026-11-26 修复（三维多光谱点云文献学习篇）：字符类漏了下划线，
+# NeREF_pipeline 被截成 NeREF 再去核验，报 404 误阻断；仓库名含 _ 是常态，三处 pattern 统一补上。
 REPO_PATTERNS = [
-    r"github\.com/([A-Za-z0-9][A-Za-z0-9\-.]*/[A-Za-z0-9][A-Za-z0-9\-.]*)",
-    r"仓库\s*[：: ]?\s*([A-Za-z0-9][A-Za-z0-9\-.]*/[A-Za-z0-9][A-Za-z0-9\-.]*)",
-    r"[Gg]it[Hh]ub\s*[：: ]\s*([A-Za-z0-9][A-Za-z0-9\-.]*/[A-Za-z0-9][A-Za-z0-9\-.]*)",
+    r"github\.com/([A-Za-z0-9][A-Za-z0-9_\-.]*/[A-Za-z0-9][A-Za-z0-9_\-.]*)",
+    r"仓库\s*[：: ]?\s*([A-Za-z0-9][A-Za-z0-9_\-.]*/[A-Za-z0-9][A-Za-z0-9_\-.]*)",
+    r"[Gg]it[Hh]ub\s*[：: ]\s*([A-Za-z0-9][A-Za-z0-9_\-.]*/[A-Za-z0-9][A-Za-z0-9_\-.]*)",
 ]
 EVAL_HINTS = [
     r"\b(ROC|AUC|RMSE|MAE|R²|R2|NRMSE|accuracy|precision|recall|F1)\b",
