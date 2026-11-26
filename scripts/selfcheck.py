@@ -348,8 +348,12 @@ def _gloss_after(text: str, pos: int, window: int = 32) -> bool:
     return len(seg[m.end(): m.end() + 40].strip()) >= 4
 
 
-def _gloss_before(text: str, start: int, window: int = 28) -> bool:
-    """词之前：是否处在一个尚未闭合的括号里。覆盖「地球系统科学交叉学科中心（ESSIC）」写法。"""
+def _gloss_before(text: str, start: int, window: int = 80) -> bool:
+    """词之前：是否处在一个尚未闭合的括号里。覆盖「地球系统科学交叉学科中心（ESSIC）」写法。
+    2026-11-26 放宽窗口 28→80（四大展会篇误报 CIIF/UNIDO）：规范写法
+    「中文（English Full Name，缩写）」里英文全称长（如 China International Industry Fair），
+    开括号距缩写常超 28 字符被误判未括注。误报风险不变：仍要求括号未闭合，
+    正常行文的成对括号会先命中「）」返回 False。"""
     seg = text[max(0, start - window):start]
     p = max(seg.rfind("（"), seg.rfind("("))
     if p == -1:

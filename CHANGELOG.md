@@ -7,6 +7,16 @@
 
 ---
 
+## 2026-11-26 · selfcheck 缩写括注误报修复：`中文（English Full Name，缩写）` 规范写法被 28 字符窗口截断
+
+→ **触发**：四大展会盘点篇自检，CIIF/UNIDO 报「未括注」。规范写法 `中国国际工业博览会（China International Industry Fair，CIIF）` 里英文全称长，开括号距缩写超过 `_gloss_before` 的 28 字符窗口，判定不到括注。管线自查发现（非良超反馈）。通用性：凡缩写紧跟长英文全称收尾（规范格式）必复现。
+
+→ **规则**：`_gloss_before` 窗口 28→80。误报风险不变：判定仍要求括号未闭合，正常行文的成对括号会先命中「）」返回 False。
+
+→ **落点**：`scripts/selfcheck.py` `_gloss_before`；双副本同步。
+
+→ **commit**：见本条目对应提交
+
 ## 2026-11-26 · selfcheck 检查 11 误报修复：仓库名含下划线被截断致 404 误阻断
 
 → **触发**：三维多光谱点云（Mol Plant）文献学习篇自检时，正文链接 `github.com/DigBigPigForU/NeREF_pipeline`（真实存在，GitHub API 确认）被检查 11 报 404 阻断。根因：`REPO_PATTERNS` 三个正则的字符类 `[A-Za-z0-9\-.]` 漏了下划线，`NeREF_pipeline` 被截成 `NeREF` 再去核验。管线自查发现（非良超反馈）。通用性：仓库名含 `_` 是常态（PlantSAM、NeREF_pipeline 等），凡引用此类仓库必复现。
