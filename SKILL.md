@@ -24,7 +24,9 @@ agent_created: true
 ```yaml
 ---
 title: 标题
-author: smiler488          # 固定署名，不要写"良超"
+author: smiler488-AI4PlantSciences   # 固定署名（2026-11-27 良超定全号统一），不要写"良超"
+                                     # 微信 API 作者限 ≤16 字符（45110）：publish.py 推送时自动降级
+                                     # 占位署名放行，**推完必须到 mp 后台把作者改回完整署名**
 digest: 摘要（显示在分享卡片；≤120 字符且 ≤300 字节，微信 45004 红线，见 references/publishing-ops.md）
 cover: ../assets/xxx_封面_900x383.png
 cover_square: ../assets/xxx_封面方形_1080x1080.png   # 可选；同名方版存在时也会自动检测
