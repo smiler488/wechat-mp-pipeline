@@ -1308,6 +1308,7 @@ def main() -> int:
     r26 = []
     m_first_h2 = re.search(r"(?m)^##\s", md)
     lead = md[:m_first_h2.start()] if m_first_h2 else md
+    lead = re.sub(r"```.*?```", "", lead, flags=re.S)          # 围栏块（含 ```poi）不是自然段
     lead = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", lead)          # 去掉图片行再数开头段
     lead_paras = [x.strip() for x in re.split(r"\n\s*\n", lead) if x.strip()]
     if len(lead_paras) > 1:

@@ -7,6 +7,21 @@
 
 ---
 
+## 2026-11-27 · 良超草稿手插地理位置卡片（闭环 C 回流，同日第三批）→ 位置卡（mp-common-poi）沉淀为渲染器固定能力
+
+→ **触发**：良超在高交会稿草稿里手动插入腾讯地图位置卡后说「你拉回来看看你能实现吗？以后地点你就可以自己插了」。
+
+→ **实证结论**（3 个一次性测试草稿往返 draft API，验后即删）：
+1. 编辑器位置卡存为 `<section nodeleaf=""><mp-common-poi … /></section>`：data-name/data-address（百分号编码 UTF-8、括号保留字面量）、data-longitude/data-latitude、data-id（0.16 位随机小数）、data-poiid、data-version=1。
+2. **poiid 必须真实**：缺 data-poiid 或假 id 的组件推送时被微信 API 剥掉（只剩空 section 壳）；真 id 不与名称交叉校验（异地名 + 真 id 存活）。
+3. 18 位编辑器旧 id 与 19 位 map.qq.com 分享 uid 均通过校验；19 位 uid 可按场馆名网络搜索 `map.qq.com/m/detail/poi/poid=` 公开挖到。
+
+→ **落点**：`src/md2wechat.py`（项目侧）新增 ```poi 围栏块（name/address/lng/lat 必填，poiid 可选）→ 生成组件与编辑器存法逐字节一致；POI 登记表 `.workbuddy/poi_registry.json`（已录 4 条，挖到新 id 追加入库）。`scripts/selfcheck.py` 检查 26 开头段计数剥 fenced code（```poi 曾被误计为自然段致「开头 3 段」误报）。双副本同步。
+
+→ **验证**：生成组件与良超手插卡片逐字节比对一致（仅 data-id 随机数不同）；selfcheck 误报已消除。
+
+---
+
 ## 2026-11-27 · ISPRS 多光谱反射场篇草稿回流十四处（同日第二批，闭环 C）→ 实证七：口语词表补六词 + 评价式报幕禁令 + 启发节自我应用第三次强化
 
 → **触发**：良超改完 ISPRS《多光谱反射场框架》草稿，原话「我修改了些，你下载下来总结沉淀下，以后尽量少让我修改」。闭环 B 判定**通用**（换任何文献学习稿均成立；启发节自我应用属**同类第三次**，须机械化兜底）。
